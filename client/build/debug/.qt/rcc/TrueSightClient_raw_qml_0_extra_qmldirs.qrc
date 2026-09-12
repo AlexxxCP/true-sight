@@ -1,6 +1,0 @@
-<RCC>
-  <qresource prefix="/qt/qml/TrueSight/">
-    <file alias="ui/qmldir">/Users/chirilcat/Projects/Mine/true-sight/client/build/debug/TrueSight/ui/qmldir</file>
-  </qresource>
-</RCC>
-

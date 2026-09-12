@@ -1,0 +1,50 @@
+[
+{
+  "directory": "/Users/chirilcat/Projects/Mine/true-sight/server/build/debug",
+  "command": "/usr/bin/c++ -DBOOST_CONTAINER_DYN_LINK -DBOOST_CONTAINER_NO_LIB -DBOOST_JSON_DYN_LINK -DBOOST_JSON_NO_LIB -DPQXX_SHARED -I/Users/chirilcat/Projects/Mine/true-sight/server/src -isystem /opt/homebrew/include -isystem /opt/homebrew/Cellar/boost/1.92.0/include -isystem /opt/homebrew/opt/openssl@3/include -g -std=c++20 -arch arm64 -o CMakeFiles/TrueSightServer.dir/src/controllers/healthcheck.cpp.o -c /Users/chirilcat/Projects/Mine/true-sight/server/src/controllers/healthcheck.cpp",
+  "file": "/Users/chirilcat/Projects/Mine/true-sight/server/src/controllers/healthcheck.cpp",
+  "output": "/Users/chirilcat/Projects/Mine/true-sight/server/build/debug/CMakeFiles/TrueSightServer.dir/src/controllers/healthcheck.cpp.o"
+},
+{
+  "directory": "/Users/chirilcat/Projects/Mine/true-sight/server/build/debug",
+  "command": "/usr/bin/c++ -DBOOST_CONTAINER_DYN_LINK -DBOOST_CONTAINER_NO_LIB -DBOOST_JSON_DYN_LINK -DBOOST_JSON_NO_LIB -DPQXX_SHARED -I/Users/chirilcat/Projects/Mine/true-sight/server/src -isystem /opt/homebrew/include -isystem /opt/homebrew/Cellar/boost/1.92.0/include -isystem /opt/homebrew/opt/openssl@3/include -g -std=c++20 -arch arm64 -o CMakeFiles/TrueSightServer.dir/src/crypto/jwt.cpp.o -c /Users/chirilcat/Projects/Mine/true-sight/server/src/crypto/jwt.cpp",
+  "file": "/Users/chirilcat/Projects/Mine/true-sight/server/src/crypto/jwt.cpp",
+  "output": "/Users/chirilcat/Projects/Mine/true-sight/server/build/debug/CMakeFiles/TrueSightServer.dir/src/crypto/jwt.cpp.o"
+},
+{
+  "directory": "/Users/chirilcat/Projects/Mine/true-sight/server/build/debug",
+  "command": "/usr/bin/c++ -DBOOST_CONTAINER_DYN_LINK -DBOOST_CONTAINER_NO_LIB -DBOOST_JSON_DYN_LINK -DBOOST_JSON_NO_LIB -DPQXX_SHARED -I/Users/chirilcat/Projects/Mine/true-sight/server/src -isystem /opt/homebrew/include -isystem /opt/homebrew/Cellar/boost/1.92.0/include -isystem /opt/homebrew/opt/openssl@3/include -g -std=c++20 -arch arm64 -o CMakeFiles/TrueSightServer.dir/src/db/database.cpp.o -c /Users/chirilcat/Projects/Mine/true-sight/server/src/db/database.cpp",
+  "file": "/Users/chirilcat/Projects/Mine/true-sight/server/src/db/database.cpp",
+  "output": "/Users/chirilcat/Projects/Mine/true-sight/server/build/debug/CMakeFiles/TrueSightServer.dir/src/db/database.cpp.o"
+},
+{
+  "directory": "/Users/chirilcat/Projects/Mine/true-sight/server/build/debug",
+  "command": "/usr/bin/c++ -DBOOST_CONTAINER_DYN_LINK -DBOOST_CONTAINER_NO_LIB -DBOOST_JSON_DYN_LINK -DBOOST_JSON_NO_LIB -DPQXX_SHARED -I/Users/chirilcat/Projects/Mine/true-sight/server/src -isystem /opt/homebrew/include -isystem /opt/homebrew/Cellar/boost/1.92.0/include -isystem /opt/homebrew/opt/openssl@3/include -g -std=c++20 -arch arm64 -o CMakeFiles/TrueSightServer.dir/src/db/database_connection.cpp.o -c /Users/chirilcat/Projects/Mine/true-sight/server/src/db/database_connection.cpp",
+  "file": "/Users/chirilcat/Projects/Mine/true-sight/server/src/db/database_connection.cpp",
+  "output": "/Users/chirilcat/Projects/Mine/true-sight/server/build/debug/CMakeFiles/TrueSightServer.dir/src/db/database_connection.cpp.o"
+},
+{
+  "directory": "/Users/chirilcat/Projects/Mine/true-sight/server/build/debug",
+  "command": "/usr/bin/c++ -DBOOST_CONTAINER_DYN_LINK -DBOOST_CONTAINER_NO_LIB -DBOOST_JSON_DYN_LINK -DBOOST_JSON_NO_LIB -DPQXX_SHARED -I/Users/chirilcat/Projects/Mine/true-sight/server/src -isystem /opt/homebrew/include -isystem /opt/homebrew/Cellar/boost/1.92.0/include -isystem /opt/homebrew/opt/openssl@3/include -g -std=c++20 -arch arm64 -o CMakeFiles/TrueSightServer.dir/src/http/controller.cpp.o -c /Users/chirilcat/Projects/Mine/true-sight/server/src/http/controller.cpp",
+  "file": "/Users/chirilcat/Projects/Mine/true-sight/server/src/http/controller.cpp",
+  "output": "/Users/chirilcat/Projects/Mine/true-sight/server/build/debug/CMakeFiles/TrueSightServer.dir/src/http/controller.cpp.o"
+},
+{
+  "directory": "/Users/chirilcat/Projects/Mine/true-sight/server/build/debug",
+  "command": "/usr/bin/c++ -DBOOST_CONTAINER_DYN_LINK -DBOOST_CONTAINER_NO_LIB -DBOOST_JSON_DYN_LINK -DBOOST_JSON_NO_LIB -DPQXX_SHARED -I/Users/chirilcat/Projects/Mine/true-sight/server/src -isystem /opt/homebrew/include -isystem /opt/homebrew/Cellar/boost/1.92.0/include -isystem /opt/homebrew/opt/openssl@3/include -g -std=c++20 -arch arm64 -o CMakeFiles/TrueSightServer.dir/src/http/default_responses.cpp.o -c /Users/chirilcat/Projects/Mine/true-sight/server/src/http/default_responses.cpp",
+  "file": "/Users/chirilcat/Projects/Mine/true-sight/server/src/http/default_responses.cpp",
+  "output": "/Users/chirilcat/Projects/Mine/true-sight/server/build/debug/CMakeFiles/TrueSightServer.dir/src/http/default_responses.cpp.o"
+},
+{
+  "directory": "/Users/chirilcat/Projects/Mine/true-sight/server/build/debug",
+  "command": "/usr/bin/c++ -DBOOST_CONTAINER_DYN_LINK -DBOOST_CONTAINER_NO_LIB -DBOOST_JSON_DYN_LINK -DBOOST_JSON_NO_LIB -DPQXX_SHARED -I/Users/chirilcat/Projects/Mine/true-sight/server/src -isystem /opt/homebrew/include -isystem /opt/homebrew/Cellar/boost/1.92.0/include -isystem /opt/homebrew/opt/openssl@3/include -g -std=c++20 -arch arm64 -o CMakeFiles/TrueSightServer.dir/src/http/router.cpp.o -c /Users/chirilcat/Projects/Mine/true-sight/server/src/http/router.cpp",
+  "file": "/Users/chirilcat/Projects/Mine/true-sight/server/src/http/router.cpp",
+  "output": "/Users/chirilcat/Projects/Mine/true-sight/server/build/debug/CMakeFiles/TrueSightServer.dir/src/http/router.cpp.o"
+},
+{
+  "directory": "/Users/chirilcat/Projects/Mine/true-sight/server/build/debug",
+  "command": "/usr/bin/c++ -DBOOST_CONTAINER_DYN_LINK -DBOOST_CONTAINER_NO_LIB -DBOOST_JSON_DYN_LINK -DBOOST_JSON_NO_LIB -DPQXX_SHARED -I/Users/chirilcat/Projects/Mine/true-sight/server/src -isystem /opt/homebrew/include -isystem /opt/homebrew/Cellar/boost/1.92.0/include -isystem /opt/homebrew/opt/openssl@3/include -g -std=c++20 -arch arm64 -o CMakeFiles/TrueSightServer.dir/src/main.cpp.o -c /Users/chirilcat/Projects/Mine/true-sight/server/src/main.cpp",
+  "file": "/Users/chirilcat/Projects/Mine/true-sight/server/src/main.cpp",
+  "output": "/Users/chirilcat/Projects/Mine/true-sight/server/build/debug/CMakeFiles/TrueSightServer.dir/src/main.cpp.o"
+}
+]

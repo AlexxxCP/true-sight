@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/">
+    <file alias="/qt/qml/TrueSight">/Users/chirilcat/Projects/Mine/true-sight/client/build/debug/TrueSight</file>
+
+  </qresource>
+</RCC>

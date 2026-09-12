@@ -1,0 +1,15 @@
+<RCC>
+  <qresource prefix="/qt/qml/TrueSight/">
+    <file alias="ui/AppHeader.qml">/Users/chirilcat/Projects/Mine/true-sight/client/ui/AppHeader.qml</file>
+    <file alias="ui/ChatHeader.qml">/Users/chirilcat/Projects/Mine/true-sight/client/ui/ChatHeader.qml</file>
+    <file alias="ui/ConversationEntry.qml">/Users/chirilcat/Projects/Mine/true-sight/client/ui/ConversationEntry.qml</file>
+    <file alias="ui/ConversationFilterInput.qml">/Users/chirilcat/Projects/Mine/true-sight/client/ui/ConversationFilterInput.qml</file>
+    <file alias="ui/ConversationList.qml">/Users/chirilcat/Projects/Mine/true-sight/client/ui/ConversationList.qml</file>
+    <file alias="ui/ConversationView.qml">/Users/chirilcat/Projects/Mine/true-sight/client/ui/ConversationView.qml</file>
+    <file alias="ui/Main.qml">/Users/chirilcat/Projects/Mine/true-sight/client/ui/Main.qml</file>
+    <file alias="ui/MessageBubble.qml">/Users/chirilcat/Projects/Mine/true-sight/client/ui/MessageBubble.qml</file>
+    <file alias="ui/MessageComposer.qml">/Users/chirilcat/Projects/Mine/true-sight/client/ui/MessageComposer.qml</file>
+    <file alias="ui/SearchField.qml">/Users/chirilcat/Projects/Mine/true-sight/client/ui/SearchField.qml</file>
+  </qresource>
+</RCC>
+

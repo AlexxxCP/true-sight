@@ -17,6 +17,14 @@ Response not_found(
     return res;
 }
 
+Response bad_request(
+    RequestContext& ctx,
+    const std::string& err
+) {
+    Response res = json(ctx, http::status::bad_request, {{ "status", err }});
+    return res;
+}
+
 Response json(RequestContext& context, http::status status, const boost::json::value& body) {
     http::response<http::string_body> response {
         status,

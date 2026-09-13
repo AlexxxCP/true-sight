@@ -64,14 +64,12 @@ asio::awaitable<void> session(tcp::socket socket, Router& router) {
 }
 
 asio::awaitable<void> listen(asio::io_context& io, Router& context) {
-
     tcp::acceptor acceptor(
         io,
         tcp::endpoint(tcp::v4(), PORT)
     );
 
     std::cout << "Listening on http://localhost:" << PORT << '\n';
-
     for (;;) {
         tcp::socket socket =
             co_await acceptor.async_accept(asio::use_awaitable);
@@ -86,14 +84,12 @@ asio::awaitable<void> listen(asio::io_context& io, Router& context) {
 
 int main() {
     asio::io_context io;
-
     Database db{
         CONNECTION_STRING,
         4
     };
 
     Router router{};
-
     router.register_path("/health-check", std::make_unique<HealthCheckController>(db));
     router.register_path("/get-challenge", std::make_unique<GetChallengeController>(db));
     router.register_path("/validate-challenge", std::make_unique<ValidateChallengeController>(db));

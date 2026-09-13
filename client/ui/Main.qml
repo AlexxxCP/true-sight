@@ -70,33 +70,32 @@ ApplicationWindow {
     property string activeConversationName: "Maya Chen"
     property string activeConversationStatus: "Available"
 
+    // UI-only navigation demo. Later, C++ should control this after it validates
+    // the username and selected private-key file.
+    property int currentScreen: 0
+    property string selectedUsername
+    property url selectedPrivateKeyPath
+
     header: AppHeader { }
 
-    SplitView {
+    StackLayout {
         anchors.fill: parent
+        currentIndex: root.currentScreen
 
-        handle: Rectangle {
-            implicitWidth: 6
-            color: "transparent"
-
-            Rectangle {
-                anchors.centerIn: parent
-                width: 1
-                height: parent.height
-                color: "#e4e7ec"
+        KeySelectionScreen {
+            onContinueRequested: (username, privateKeyPath) => {
+                // This demo stores the username and path; it does not open the file.
+                //root.selectedUsername = username
+                //root.selectedPrivateKeyPath = privateKeyPath
+                //root.currentScreen = 1
+                Auth.hello()
             }
         }
 
-        ConversationList {
-            SplitView.preferredWidth: 310
-            SplitView.minimumWidth: 240
+        MessengerScreen {
             conversations: root.conversations
-        }
-
-        ConversationView {
-            SplitView.fillWidth: true
-            conversationName: root.activeConversationName
-            conversationStatus: root.activeConversationStatus
+            activeConversationName: root.activeConversationName
+            activeConversationStatus: root.activeConversationStatus
             messages: root.messages
         }
     }

@@ -7,7 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick)
+find_package(Qt6 REQUIRED COMPONENTS Quick Network WebSockets)
+find_package(OpenSSL REQUIRED)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
@@ -37,6 +38,10 @@ target_include_directories(TrueSightClient PRIVATE
 
 target_link_libraries(TrueSightClient PRIVATE
     Qt6::Quick
+    Qt6::Network
+    Qt6::WebSockets
+    OpenSSL::SSL
+    OpenSSL::Crypto
 )
 
 option(ENABLE_ASAN "Enable AddressSanitizer" OFF)

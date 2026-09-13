@@ -8,12 +8,20 @@
 #include <openssl/core_names.h>
 #include <openssl/evp.h>
 
-class JWT {
-public:
-    JWT();
+#include "shared.hpp"
 
-    static std::string create(boost::json::object body);
-    static bool validate(const std::string&);
+namespace crypto::jwt {
+    struct Claims {
+        std::string user_iid;
+        i64 issued_at;
+        i64 expires_at;
+        std::string token_id;
+    };
+
+    std::pair<std::string, Claims> create_access_token(std::string_view user_iid);
+    std::optional<Claims> validate_access_token(const std::string &);
+    std::string create(boost::json::object body);
+    bool validate_signature(const std::string&);
 };
 
 

@@ -3,6 +3,9 @@
 #include <string>
 
 #include "controllers/healthcheck.hpp"
+#include "controllers/get_challenge.hpp"
+#include "controllers/validate_challenge.hpp"
+
 #include "db/database.hpp"
 #include "http/router.hpp"
 #include "shared.hpp"
@@ -81,7 +84,6 @@ asio::awaitable<void> listen(asio::io_context& io, Router& context) {
     }
 }
 
-
 int main() {
     asio::io_context io;
 
@@ -93,6 +95,8 @@ int main() {
     Router router{};
 
     router.register_path("/health-check", std::make_unique<HealthCheckController>(db));
+    router.register_path("/get-challenge", std::make_unique<GetChallengeController>(db));
+    router.register_path("/validate-challenge", std::make_unique<ValidateChallengeController>(db));
 
     asio::co_spawn(
         io,

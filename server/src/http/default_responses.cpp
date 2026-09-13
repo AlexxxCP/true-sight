@@ -11,9 +11,10 @@ Response method_not_allowed(
 }
 
 Response not_found(
-    RequestContext& context
+    RequestContext& context,
+    std::string message
 ) {
-    Response res = json(context, http::status::not_found, {{"status", "Not Found"}});
+    Response res = json(context, http::status::not_found, {{"status", message }});
     return res;
 }
 
@@ -22,6 +23,22 @@ Response bad_request(
     const std::string& err
 ) {
     Response res = json(ctx, http::status::bad_request, {{ "status", err }});
+    return res;
+}
+
+Response internal_server_error(
+    RequestContext& context,
+    std::string message
+) {
+    Response res = json(context, http::status::internal_server_error, {{ "status", message }});
+    return res;
+}
+
+Response unauthorized(
+    RequestContext& context,
+    std::string message
+) {
+    Response res = json(context, http::status::unauthorized, {{ "status", message }});
     return res;
 }
 
@@ -43,5 +60,7 @@ Response json(RequestContext& context, http::status status, const boost::json::v
     return response;
 }
 
+
 }
+
 

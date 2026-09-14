@@ -47,8 +47,8 @@ AsyncResponse MessagesController::GET(RequestContext& ctx) {
 
     for (const auto& message : conversation_res) {
         auto ciphertext = message["ciphertext"].as<pqxx::bytes>();
-        auto auth_tag = message["auth_tag"].as<pqxx::bytes>();
-        auto nonce = message["nonce"].as<pqxx::bytes>();
+        auto auth_tag = message["auth_tag"];
+        auto nonce = message["nonce"];
 
         std::string ciphertext_bytes {
             reinterpret_cast<const char*>(ciphertext.data()),
@@ -56,12 +56,12 @@ AsyncResponse MessagesController::GET(RequestContext& ctx) {
         };
 
         std::string auth_tag_bytes {
-            reinterpret_cast<const char*>(auth_tag.data()),
+            auth_tag.as<pqxx::bytes>(),
             auth_tag.size()
         };
 
         std::string nonce_bytes {
-            reinterpret_cast<const char*>(nonce.data()),
+            reinterpret_cast<const char*>(nonce.as<pqxx::bytes>().data()),
             nonce.size()
         };
 
@@ -91,7 +91,7 @@ AsyncResponse MessagesController::GET(RequestContext& ctx) {
 //      "to": "Alice",
 //      "nonce": <base64encoded>,
 //      "ciphertext": <base64encoded>,
-//      "auth_tag": <base64encoded>,
+//      "authtag": <base64encoded>,
 //      "protocol_version": 1,
 //      "message_counter": 2
 // }
@@ -99,7 +99,7 @@ AsyncResponse MessagesController::GET(RequestContext& ctx) {
 constexpr std::array message_create{
     Field{"to", boost::json::kind::string},
     Field{"nonce", boost::json::kind::string},
-    Field{"auth_tag", boost::json::kind::string},
+    Field{"authtag", boost::json::kind::string},
     Field{"ciphertext", boost::json::kind::string},
     Field{"protocol_version", boost::json::kind::int64},
     Field{"message_counter", boost::json::kind::int64}
@@ -141,13 +141,13 @@ AsyncResponse MessagesController::POST(RequestContext& ctx) {
 
     auto nonce = crypto::base64url_decode(obj["nonce"].as_string());
     auto ciphertext = crypto::base64url_decode(obj["ciphertext"].as_string());
-    auto auth_tag = crypto::base64url_decode(obj["auth_tag"].as_string());
+    auto authtag = crypto::base64url_decode(obj["authtag"].as_string());
 
     if (nonce.size() != 12) {
         co_return responses::bad_request(ctx, "Ivalid nonce");
     }
 
-    if (auth_tag.size() != 16) {
+    if (authtag.size() != 16) {
         co_return responses::bad_request(ctx, "Ivalid auth tag");
     }
 
@@ -173,16 +173,16 @@ AsyncResponse MessagesController::POST(RequestContext& ctx) {
         ciphertext.size()
     };
 
-    auto auth_tag_bytes = std::span<std::byte>{
-        reinterpret_cast<std::byte*>(auth_tag.data()),
-        auth_tag.size()
+    auto authtag_bytes = std::span<std::byte>{
+        reinterpret_cast<std::byte*>(authtag.data()),
+        authtag.size()
     };
 
     co_await db_.exec_async(
         "INSERT INTO messages "
         "(sender_iid, receiver_iid, nonce, ciphertext, auth_tag, protocol_version, message_counter) "
         "VALUES ($1, $2, $3, $4, $5, $6, $7);",
-        {from, to, nonce_bytes, ciphertext_bytes, auth_tag_bytes, protocol_version, message_counter},
+        {from, to, nonce_bytes, ciphertext_bytes, authtag_bytes, protocol_version, message_counter},
         asio::use_awaitable
     );
 

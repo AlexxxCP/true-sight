@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(Boost REQUIRED COMPONENTS system json)
+find_package(Boost REQUIRED COMPONENTS system json url)
 find_package(libpqxx REQUIRED)
 find_package(OpenSSL REQUIRED)
 
@@ -26,6 +26,7 @@ target_include_directories(TrueSightServer PRIVATE
 target_link_libraries(TrueSightServer PRIVATE
     Boost::system
     Boost::json
+    Boost::url
     libpqxx::pqxx
     OpenSSL::SSL
     OpenSSL::Crypto

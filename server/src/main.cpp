@@ -5,9 +5,11 @@
 #include "controllers/healthcheck.hpp"
 #include "controllers/get_challenge.hpp"
 #include "controllers/validate_challenge.hpp"
+#include "controllers/messages.hpp"
 
 #include "db/database.hpp"
 #include "http/router.hpp"
+#include "middleware/auth_middleware.hpp"
 #include "shared.hpp"
 
 const std::size_t PORT = 8888;
@@ -89,10 +91,18 @@ int main() {
         4
     };
 
+    std::vector<std::shared_ptr<Middleware>> auth_check;
+    auth_check.push_back(std::make_shared<AuthMiddleware>());
+
     Router router{};
     router.register_path("/health-check", std::make_unique<HealthCheckController>(db));
     router.register_path("/get-challenge", std::make_unique<GetChallengeController>(db));
     router.register_path("/validate-challenge", std::make_unique<ValidateChallengeController>(db));
+    router.register_path(
+        "/messages",
+        std::make_unique<MessagesController>(db),
+        auth_check
+    );
 
     asio::co_spawn(
         io,

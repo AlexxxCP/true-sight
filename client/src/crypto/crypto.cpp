@@ -58,6 +58,7 @@ std::vector<unsigned char> sign_ed25519(
 
     EVP_MD_CTX* ctx = EVP_MD_CTX_new();
     if (!ctx) {
+        EVP_PKEY_free(key);
         throw std::runtime_error("EVP_MD_CTX_new failed");
     }
 
@@ -81,7 +82,7 @@ std::vector<unsigned char> sign_ed25519(
         &signature_size,
         msg.data(),
         msg.size()
-    )) {
+    ) <= 0) {
         EVP_MD_CTX_free(ctx);
         EVP_PKEY_free(key);
         throw std::runtime_error("failed to get signature size");

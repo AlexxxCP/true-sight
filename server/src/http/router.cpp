@@ -6,7 +6,7 @@ void Router::register_path(std::string path, Controller_p controller, Middleware
         std::move(path),
         Route{
             std::move(controller),
-            std::move(middleware)
+            middleware
         }
     );
 };
@@ -23,10 +23,10 @@ AsyncResponse Router::route(const Request& req) {
     }
 
     for (auto& middleware : it->second.middleware) {
-        auto result = co_await middleware->handle(context);
+        auto middlware_res = co_await middleware->handle(context);
 
-        if (result.has_value()) {
-            co_return std::move(*result);
+        if (middlware_res.has_value()) {
+            co_return std::move(*middlware_res);
         }
     }
 

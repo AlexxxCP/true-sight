@@ -7,10 +7,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(QCORO_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(QCORO_BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(USE_QT_VERSION 6 CACHE STRING "" FORCE)
+
 find_package(Qt6 REQUIRED COMPONENTS Quick Network WebSockets)
 find_package(OpenSSL REQUIRED)
+add_subdirectory(external/qcoro)
 
 qt_standard_project_setup(REQUIRES 6.8)
+qcoro_enable_coroutines()
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
@@ -42,6 +48,9 @@ target_link_libraries(TrueSightClient PRIVATE
     Qt6::WebSockets
     OpenSSL::SSL
     OpenSSL::Crypto
+    QCoro6::Core
+    QCoro6::Network
+    QCoro6::Coro
 )
 
 option(ENABLE_ASAN "Enable AddressSanitizer" OFF)

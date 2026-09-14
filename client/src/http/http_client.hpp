@@ -1,5 +1,6 @@
 #pragma once
 
+#include "qcorotask.h"
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -17,11 +18,9 @@ public:
         std::function<void(QString)> on_error
     );
 
-    void post(
+    QCoro::Task<QJsonObject> post(
         const QUrl& url,
-        const QJsonObject& body,
-        std::function<void(QJsonObject)> on_success,
-        std::function<void(QString)> on_error
+        const QJsonObject& body
     );
 
 private:

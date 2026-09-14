@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QCoroNetworkReply>
 
 HttpClient::HttpClient(QObject* parent)
     : QObject(parent) {}
@@ -53,11 +54,9 @@ void HttpClient::get(
     );
 }
 
-void HttpClient::post(
+QCoro::Task<QJsonObject> HttpClient::post(
     const QUrl& url,
-    const QJsonObject& body,
-    std::function<void(QJsonObject)> on_success,
-    std::function<void(QString)> on_error
+    const QJsonObject& body
 ) {
     QNetworkRequest request{url};
 
@@ -69,38 +68,33 @@ void HttpClient::post(
     QByteArray payload =
         QJsonDocument{body}.toJson(QJsonDocument::Compact);
 
-    QNetworkReply* reply = network_.post(request, payload);
+    QNetworkReply* reply =
+        co_await network_.post(request, payload);
 
-    connect(
-        reply,
-        &QNetworkReply::finished,
-        this,
-        [reply, on_success = std::move(on_success), on_error = std::move(on_error)]() {
-            if (reply->error() != QNetworkReply::NoError) {
-                on_error(reply->errorString());
-                reply->deleteLater();
-                return;
-            }
+    if (reply->error() != QNetworkReply::NoError) {
+        QString error = reply->errorString();
+        reply->deleteLater();
 
-            QJsonParseError parse_error;
+        throw std::runtime_error(error.toStdString());
+    }
 
-            QJsonDocument document =
-                QJsonDocument::fromJson(reply->readAll(), &parse_error);
+    QJsonParseError parse_error;
 
-            if (parse_error.error != QJsonParseError::NoError) {
-                on_error(parse_error.errorString());
-                reply->deleteLater();
-                return;
-            }
+    QJsonDocument document = QJsonDocument::fromJson(reply->readAll(), &parse_error);
 
-            if (!document.isObject()) {
-                on_error("Expected JSON object");
-                reply->deleteLater();
-                return;
-            }
+    reply->deleteLater();
 
-            on_success(document.object());
-            reply->deleteLater();
-        }
-    );
+    if (parse_error.error != QJsonParseError::NoError) {
+        throw std::runtime_error(
+            parse_error.errorString().toStdString()
+        );
+    }
+
+    if (!document.isObject()) {
+        throw std::runtime_error(
+            "Expected JSON object"
+        );
+    }
+
+    co_return document.object();
 }

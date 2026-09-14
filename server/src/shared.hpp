@@ -27,3 +27,4 @@ struct RequestContext {
 };
 
 using AsyncResponse = asio::awaitable<http::message_generator>;
+using MiddlewareResponse = asio::awaitable<std::optional<http::message_generator>>;

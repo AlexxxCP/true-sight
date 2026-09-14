@@ -1,3 +1,6 @@
 [submodule "server/external/cpp-dotenv"]
 	path = server/external/cpp-dotenv
 	url = https://github.com/adeharo9/cpp-dotenv.git
+[submodule "client/external/qcoro"]
+	path = client/external/qcoro
+	url = https://github.com/danvratil/qcoro.git

@@ -2,12 +2,10 @@
 
 #include "shared.hpp"
 
-using MiddlewareResult =
-    asio::awaitable<std::optional<http::message_generator>>;
+#include <boost/asio/awaitable.hpp>
 
 class Middleware {
 public:
-    virtual MiddlewareResult handle(RequestContext& context) = 0;
+    virtual MiddlewareResponse handle(RequestContext& ctx) = 0;
     virtual ~Middleware() = default;
 };
-

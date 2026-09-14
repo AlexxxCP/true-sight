@@ -3,7 +3,6 @@
 #include "shared.hpp"
 #include <boost/json.hpp>
 
-
 class Controller {
 public:
 

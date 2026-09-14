@@ -9,11 +9,11 @@
 
 class Router {
     using Controller_p = std::unique_ptr<Controller>;
-    using Middlewares_p = std::vector<std::unique_ptr<Middleware>>;
+    using Middlewares_p = std::vector<std::shared_ptr<Middleware>>;
 
     struct Route {
         Controller_p controller;
-        std::vector<std::unique_ptr<Middleware>> middleware;
+        std::vector<std::shared_ptr<Middleware>> middleware;
     };
 
 public:

@@ -84,11 +84,21 @@ ApplicationWindow {
 
         KeySelectionScreen {
             onContinueRequested: (username, privateKeyPath) => {
-                // This demo stores the username and path; it does not open the file.
-                //root.selectedUsername = username
-                //root.selectedPrivateKeyPath = privateKeyPath
-                //root.currentScreen = 1
-                Auth.hello()
+                authController.auth(username, privateKeyPath)
+            }
+        }
+
+        Connections {
+            target: authController
+
+            function onAuthFinished(success) {
+                if (success) {
+                    root.currentScreen = 1
+                }
+            }
+
+            function onAuthFailed(error) {
+                console.log("Auth failed: ", error);
             }
         }
 

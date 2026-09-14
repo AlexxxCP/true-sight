@@ -1,5 +1,6 @@
 #include "http/router.hpp"
 #include "http/default_responses.hpp"
+#include <boost/url.hpp>
 
 void Router::register_path(std::string path, Controller_p controller, Middlewares_p middleware) {
     paths_.insert_or_assign(
@@ -12,12 +13,18 @@ void Router::register_path(std::string path, Controller_p controller, Middleware
 };
 
 AsyncResponse Router::route(const Request& req) {
-    auto it = paths_.find(std::string(req.target()));
-
     RequestContext context{
         .request = req
     };
 
+    auto parsed = boost::urls::parse_origin_form(req.target());
+    if (!parsed) {
+        co_return responses::bad_request(context, "Invalid query params");
+    }
+
+    context.url = parsed.value();
+
+    auto it = paths_.find(std::string(parsed->encoded_path()));
     if (it == paths_.end()) {
         co_return responses::not_found(context);
     }

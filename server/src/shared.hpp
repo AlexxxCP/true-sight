@@ -2,6 +2,8 @@
 
 #include <boost/beast/http/string_body_fwd.hpp>
 #include <stdint.h>
+
+#include <boost/url.hpp>
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 #include <boost/beast/http.hpp>
@@ -23,6 +25,7 @@ using Response = http::response<http::string_body>;
 
 struct RequestContext {
     const Request& request;
+    boost::urls::url_view url;
     std::optional<std::string> authenticated_iid;
 };
 

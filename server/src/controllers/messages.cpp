@@ -4,6 +4,88 @@
 #include "http/default_responses.hpp"
 #include <boost/asio/use_awaitable.hpp>
 #include <boost/beast/http/status.hpp>
+#include <unordered_map>
+
+
+// /messages?from=Bob&limit=50&offset=150
+
+AsyncResponse MessagesController::GET(RequestContext& ctx) {
+    auto to = ctx.authenticated_iid;
+    if (!to.has_value()) {
+        co_return responses::unauthorized(ctx, "The JWT token does not contain the user iid");
+    }
+
+    std::unordered_map<std::string, std::string> params;
+    for (const auto& param : ctx.url.params()) {
+        params[param.key] = param.value;
+    }
+
+    if (!params.contains("from")) {
+        co_return responses::bad_request(ctx, "from query param is required");
+    }
+
+    auto from = params["from"];
+    int64_t limit = params.contains("limit")
+        ? static_cast<int64_t>(std::stoll(params["limit"]))
+        : 50;
+
+    int64_t offset = params.contains("offset")
+        ? static_cast<int64_t>(std::stoll(params["offset"]))
+        : 0;
+
+    auto conversation_res = co_await db_.exec_async(
+        "SELECT * FROM messages WHERE "
+        "((sender_iid = $1 AND receiver_iid = $2) OR "
+        "(receiver_iid = $1 AND sender_iid = $2)) "
+        "ORDER BY created_at "
+        "LIMIT $3 OFFSET $4;",
+        pqxx::params{from, *to, limit, offset},
+        asio::use_awaitable
+    );
+
+    boost::json::array messages;
+
+    for (const auto& message : conversation_res) {
+        auto ciphertext = message["ciphertext"];
+        auto auth_tag = message["auth_tag"];
+        auto nonce = message["nonce"];
+
+        std::string ciphertext_bytes {
+            ciphertext.c_str(),
+            ciphertext.size()
+        };
+
+        std::string auth_tag_bytes {
+            auth_tag.c_str(),
+            auth_tag.size()
+        };
+
+        std::string nonce_bytes {
+            nonce.c_str(),
+            nonce.size()
+        };
+
+        messages.push_back({
+            {"sender_iid", message["sender_iid"].c_str()},
+            {"receiver_iid", message["receiver_iid"].c_str()},
+            {"ciphertext", crypto::base64url_encode(ciphertext_bytes)},
+            {"auth_tag", crypto::base64url_encode(auth_tag_bytes)},
+            {"nonce", crypto::base64url_encode(nonce_bytes)},
+            {"created_at", message["created_at"].c_str()},
+            {"protocol_version", message["protocol_version"].as<int64_t>()},
+            {"message_counter", message["message_counter"].as<int64_t>()}
+        });
+    }
+
+    co_return responses::json(
+        ctx,
+        http::status::ok,
+        {
+            {"status", "ok"},
+            {"messages", std::move(messages)}
+        }
+    );
+}
 
 // {
 //      "to": "Alice",
@@ -36,7 +118,7 @@ AsyncResponse MessagesController::POST(RequestContext& ctx) {
     }
 
     if (!ctx.authenticated_iid.has_value()) {
-        co_return responses::unauthorized(ctx, "The JWT token did not contain the user iid");
+        co_return responses::unauthorized(ctx, "The JWT token does not contain the user iid");
     }
 
     boost::json::object& obj = body.as_object();

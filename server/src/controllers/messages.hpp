@@ -9,6 +9,7 @@ class MessagesController : public Controller {
         MessagesController(Database& db)
             : db_{db} {};
 
+        AsyncResponse GET(RequestContext& request) override;
         AsyncResponse POST(RequestContext& request) override;
 
     private:

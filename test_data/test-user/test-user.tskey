@@ -1,0 +1,10 @@
+{
+  "format": "truesight-key-bundle",
+  "version": 1,
+  "keys": {
+    "ed25519_pk": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAf0V24OtlluRyFtGlz0TCtaJCErqndEivXhYUYKX4gNw=\n-----END PUBLIC KEY-----",
+    "ed25519_sk": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIFoFpgexKGyS6JUwc9lO5EglSOQMMPiIrUfo/dErnKTO\n-----END PRIVATE KEY-----",
+    "x25519_pk": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VuAyEAXrIYsl2gRYIjHYEA7eeh5S15kfLSYgy4smEDpIDx9ms=\n-----END PUBLIC KEY-----",
+    "x25519_sk": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VuBCIEIFhyzZU+oYMOMbS/ztQzVKRr1zvJYTmtKa3wEzRDZ8VK\n-----END PRIVATE KEY-----"
+  }
+}

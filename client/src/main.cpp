@@ -5,18 +5,34 @@
 
 #include "app_settings.hpp"
 #include "controllers/auth.hpp"
+#include "controllers/messenger.hpp"
+#include "stores/identity_keys.hpp"
 
 int main(int argc, char* argv[])
 {
     QGuiApplication app(argc, argv);
 
-    QQmlApplicationEngine engine;
-
     AppSettings app_settings;
 
-    AuthController auth(app_settings);
+    IdentityKeys identity_keys;
+    AuthController auth(app_settings, identity_keys);
+    MessengerController messenger(app_settings, identity_keys);
+
+    QQmlApplicationEngine engine;
+
+    QObject::connect(
+        &auth,
+        &AuthController::authFinished,
+        &messenger,
+        [&messenger](bool success) {
+            if (success) {
+                messenger.loadConversations();
+            }
+        }
+    );
 
     engine.rootContext()->setContextProperty("authController", &auth);
+    engine.rootContext()->setContextProperty("messengerController", &messenger);
 
     engine.loadFromModule("TrueSight", "Main");
 

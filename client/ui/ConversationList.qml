@@ -41,10 +41,18 @@ Pane {
 
             delegate: ConversationEntry {
                 width: conversationView.width
-                personName: modelData.personName || ""
-                previewText: modelData.previewText || ""
-                timestamp: modelData.timestamp || ""
-                unreadCount: modelData.unreadCount || 0
+                personName: modelData.peer || ""
+                previewText: ""
+                timestamp: modelData.last_message_at || ""
+                unreadCount: 0
+
+                MouseArea {
+                    anchors.fill: parent
+
+                    onClicked: {
+                        messengerController.openConversation(modelData.peer)
+                    }
+                }
             }
 
             Label {

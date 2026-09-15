@@ -11,54 +11,61 @@ HttpClient::HttpClient(QObject* parent)
     : QObject(parent) {}
 
 
-void HttpClient::get(
+QCoro::Task<QJsonObject> HttpClient::get(
     const QUrl& url,
-    std::function<void(QJsonObject)> on_success,
-    std::function<void(QString)> on_error
+    const QString& jwt_token
 ) {
     QNetworkRequest request{url};
+    if (!jwt_token.isEmpty()) {
+        request.setRawHeader(
+            "Authorization",
+            QByteArray("Bearer ") + jwt_token.toUtf8()
+        );
+    }
 
-    QNetworkReply* reply = network_.get(request);
+    QNetworkReply* reply =
+        co_await network_.get(request);
 
-    connect(
-        reply,
-        &QNetworkReply::finished,
-        this,
-        [reply, on_success = std::move(on_success), on_error = std::move(on_error)]() {
-            if (reply->error() != QNetworkReply::NoError) {
-                on_error(reply->errorString());
-                reply->deleteLater();
-                return;
-            }
+    if (reply->error() != QNetworkReply::NoError) {
+        QString error = reply->errorString();
+        reply->deleteLater();
 
-            QJsonParseError parse_error;
+        throw std::runtime_error(error.toStdString());
+    }
 
-            QJsonDocument document = QJsonDocument::fromJson(reply->readAll(), &parse_error);
+    QJsonParseError parse_error;
 
-            if (parse_error.error != QJsonParseError::NoError) {
-                on_error(parse_error.errorString());
-                reply->deleteLater();
-                return;
-            }
+    QJsonDocument document = QJsonDocument::fromJson(reply->readAll(), &parse_error);
 
-            if (!document.isObject()) {
-                on_error("Expected JSON object");
-                reply->deleteLater();
-                return;
-            }
+    reply->deleteLater();
 
-            on_success(document.object());
+    if (parse_error.error != QJsonParseError::NoError) {
+        throw std::runtime_error(
+            parse_error.errorString().toStdString()
+        );
+    }
 
-            reply->deleteLater();
-        }
-    );
+    if (!document.isObject()) {
+        throw std::runtime_error(
+            "Expected JSON object"
+        );
+    }
+
+    co_return document.object();
 }
 
 QCoro::Task<QJsonObject> HttpClient::post(
     const QUrl& url,
-    const QJsonObject& body
+    const QJsonObject& body,
+    const QString& jwt_token
 ) {
     QNetworkRequest request{url};
+    if (!jwt_token.isEmpty()) {
+        request.setRawHeader(
+            "Authorization",
+            QByteArray("Bearer ") + jwt_token.toUtf8()
+        );
+    }
 
     request.setHeader(
         QNetworkRequest::ContentTypeHeader,

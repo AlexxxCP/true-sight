@@ -1,33 +1,12 @@
 #include "controllers/auth.hpp"
 #include "crypto/crypto.hpp"
-#include "impl/connect.h"
 
 #include <iostream>
 #include <QJsonObject>
 
-Q_INVOKABLE void AuthController::hello() {
-    std::cout << "hello world" << '\n';
-
-    http_.get(
-       QUrl{"http://localhost:8888/health-check"},
-        [](const QJsonObject& json) {
-            std::cout
-                << json["status"].toString().toStdString()
-                << '\n';
-        },
-        [](const QString& error) {
-            std::cerr
-                << error.toStdString()
-                << '\n';
-        }
-    );
-
-    std::cout.flush();
-}
-
 QCoro::Task<> AuthController::authAsync(
     QString username,
-    QUrl private_key_path
+    std::vector<uint8_t> ed25519_sk
 ) {
     try {
         app_settings_.setUsername(username);
@@ -51,12 +30,8 @@ QCoro::Task<> AuthController::authAsync(
             static_cast<size_t>(challenge_bytes.size())
         };
 
-        std::filesystem::path path{
-            private_key_path.toLocalFile().toStdString()
-        };
-
         auto signature
-            = crypto::sign_ed25519(path, challenge_span);
+            = crypto::sign_ed25519(ed25519_sk, challenge_span);
 
         auto encoded_sig
             = crypto::base64url_encode(signature);
@@ -84,10 +59,13 @@ Q_INVOKABLE void AuthController::auth(
     QString username,
     QUrl private_key_path
 ) {
+    identity_keys_.load_from_bundle(private_key_path);
+    identity_keys_.set_current_username(username.toStdString());
+
     QCoro::connect(
         authAsync(
             std::move(username),
-            std::move(private_key_path)
+            identity_keys_.ed25519_sk()
         ),
         this,
         []{}

@@ -1,0 +1,17 @@
+{
+    "bob",
+    IdentityKeys::Keys{
+        .ed25519_pk = {
+            0x7a,             0x97,             0x44,             0x05,             0x29,             0x48,             0x15,             0x03,
+            0x6c,             0xd1,             0xaa,             0x89,             0x4c,             0xc9,             0xaf,             0x51,
+            0x54,             0x9a,             0xc9,             0x4f,             0xf5,             0x2a,             0x28,             0xac,
+            0xb1,             0x06,             0xb0,             0x9c,             0x08,             0x8a,             0xa6,             0x15
+        },
+        .x25519_pk = {
+            0x44,             0x39,             0x7e,             0xf5,             0x7e,             0x75,             0x45,             0x18,
+            0x24,             0x35,             0x0e,             0x87,             0xfa,             0x32,             0x1b,             0xbc,
+            0xd1,             0xe1,             0xc0,             0xc7,             0x20,             0x54,             0xb5,             0xb4,
+            0xaa,             0x65,             0x1d,             0x8b,             0x3e,             0x55,             0x33,             0x00
+        }
+    }
+},

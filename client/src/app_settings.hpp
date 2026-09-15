@@ -27,6 +27,9 @@ public:
     void setUsername(const QString& username);
     QString backendUrl() const;
 
+    bool loggedIn() const;
+    void setLoggedIn(bool);
+
 private:
     QSettings settings_{"TrueSight", "TrueSightClient"};
 

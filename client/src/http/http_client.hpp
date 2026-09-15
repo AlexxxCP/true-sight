@@ -6,21 +6,19 @@
 #include <QQmlContext>
 #include <QNetworkAccessManager>
 
-#include <functional>
-
 class HttpClient : public QObject {
 public:
     explicit HttpClient(QObject* parent = nullptr);
 
-    void get(
+    QCoro::Task<QJsonObject> get(
         const QUrl& url,
-        std::function<void(QJsonObject)> on_success,
-        std::function<void(QString)> on_error
+        const QString& jwt_token = {}
     );
 
     QCoro::Task<QJsonObject> post(
         const QUrl& url,
-        const QJsonObject& body
+        const QJsonObject& body,
+        const QString& jwt_token = {}
     );
 
 private:

@@ -36,9 +36,9 @@ Pane {
 
             delegate: MessageBubble {
                 width: messageView.width
-                messageText: modelData.messageText || ""
-                sentByMe: modelData.sentByMe || false
-                timestamp: modelData.timestamp || ""
+                messageText: modelData.ciphertext || ""
+                sentByMe: modelData.receiver_iid === root.conversationName
+                timestamp: modelData.created_at || ""
             }
 
             Label {
@@ -50,7 +50,19 @@ Pane {
         }
 
         MessageComposer {
+            id: messageComposer
             Layout.fillWidth: true
+            enabled: root.conversationName.length > 0
+
+            onSendRequested: {
+                const outgoingMessage = draftText
+
+                if (outgoingMessage.trim().length === 0)
+                    return
+
+                messengerController.sendMessage(outgoingMessage)
+                draftText = ""
+            }
         }
-    }
+  }
 }

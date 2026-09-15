@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 
+#include "controllers/conversations.hpp"
 #include "controllers/healthcheck.hpp"
 #include "controllers/get_challenge.hpp"
 #include "controllers/validate_challenge.hpp"
@@ -25,9 +26,7 @@ asio::awaitable<void> session(tcp::socket socket, Router& router) {
 
     for (;;) {
         http::request<http::string_body> request;
-
         beast::error_code ec;
-
         co_await http::async_read(
             socket,
             buffer,
@@ -101,6 +100,12 @@ int main() {
     router.register_path(
         "/messages",
         std::make_unique<MessagesController>(db),
+        auth_check
+    );
+
+    router.register_path(
+        "/conversations",
+        std::make_unique<ConversationsController>(db),
         auth_check
     );
 

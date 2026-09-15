@@ -31,18 +31,21 @@ jobs:
 
       - name: Build
         run: |
-          cmake --build build --config Release
+          cmake --build build --config Release --verbose
 
-      - name: Package
+      - name: Inspect build
         run: |
-          mkdir -p package
-          cp -R build/TrueSightClient.app package/
+          echo "=== BUILD FILES ==="
+          find build -maxdepth 5 -type f -print
 
-          cd package
-          zip -r TrueSightClient-macOS.zip TrueSightClient.app
+          echo "=== EXECUTABLES ==="
+          find build -type f -perm +111 -print
 
-      - name: Upload artifact
+          echo "=== APP BUNDLES ==="
+          find build -name "*.app" -print
+
+      - name: Upload build directory
         uses: actions/upload-artifact@v4
         with:
-          name: TrueSightClient-macOS
-          path: package/TrueSightClient-macOS.zip
+          name: TrueSightClient-build
+          path: build/

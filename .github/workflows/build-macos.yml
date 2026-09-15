@@ -33,19 +33,31 @@ jobs:
         run: |
           cmake --build build --config Release --verbose
 
-      - name: Inspect build
+      - name: Find application
         run: |
-          echo "=== BUILD FILES ==="
-          find build -maxdepth 5 -type f -print
+          echo "Searching for .app..."
+          find build -name "*.app" -type d -print
 
-          echo "=== EXECUTABLES ==="
-          find build -type f -perm +111 -print
+      - name: Package application
+        run: |
+          mkdir -p package
 
-          echo "=== APP BUNDLES ==="
-          find build -name "*.app" -print
+          APP=$(find build -name "*.app" -type d | head -n 1)
 
-      - name: Upload build directory
+          if [ -z "$APP" ]; then
+            echo "ERROR: No .app bundle found!"
+            exit 1
+          fi
+
+          echo "Found: $APP"
+
+          cp -R "$APP" package/TrueSight.app
+
+          cd package
+          zip -r TrueSight-macOS.zip TrueSight.app
+
+      - name: Upload macOS client
         uses: actions/upload-artifact@v4
         with:
-          name: TrueSightClient-build
-          path: build/
+          name: TrueSight-macOS
+          path: package/TrueSight-macOS.zip

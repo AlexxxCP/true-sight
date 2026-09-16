@@ -6,7 +6,7 @@
 #include <array>
 #include <QString>
 #include <optional>
-
+#include <string>
 namespace crypto {
 
 using u8 = uint8_t;

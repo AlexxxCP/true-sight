@@ -26,16 +26,14 @@ jobs:
           modules: "qtwebsockets"
           cache: true
 
-      - name: Setup MSVC
-        uses: ilammy/msvc-dev-cmd@v1
-
       - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgGitCommitId: "8eb57355a4ffb410a2e94c07b4dbb1ac235bd274"
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git ${{ github.workspace }}/vcpkg
+          ${{ github.workspace }}/vcpkg/bootstrap-vcpkg.bat
+        shell: pwsh
 
       - name: Install OpenSSL via vcpkg
-        run: ${{ github.workspace }}/vcpkg/vcpkg install openssl:x64-windows
+        run: ${{ github.workspace }}/vcpkg/vcpkg.exe install openssl:x64-windows
         shell: pwsh
 
       - name: Configure

@@ -4,5 +4,7 @@
 AsyncResponse HealthCheckController::GET(RequestContext& request) {
     auto response = responses::json(request, http::status::ok, {{"status", "ok"}});
 
+    ws_.notify_all({{"message", "hello"}});
+
     co_return response;
 }

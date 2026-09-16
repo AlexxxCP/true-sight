@@ -40,6 +40,7 @@ public:
     QVariantList conversations() const;
     QVariantList messages() const;
     QString peer() const;
+    void onMessageReceived(const QString& peer);
 
     void loadConversations();
 

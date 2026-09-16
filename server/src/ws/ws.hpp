@@ -16,7 +16,11 @@ public:
 
     void notify(
         std::string user_iid,
-        boost::json::object message
+        const boost::json::object& message
+    );
+
+    void notify_all(
+        const boost::json::object& message
     );
 
 private:

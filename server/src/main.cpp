@@ -31,7 +31,7 @@ const std::string CONNECTION_STRING =
 asio::awaitable<void> handle_ws_upgrade(
     tcp::socket socket,
     http::request<http::string_body> request,
-    WebSocket& websocket_service
+    WebSocket& ws
 ) {
     auto ctx = RequestContext{
         .request = request
@@ -52,7 +52,7 @@ asio::awaitable<void> handle_ws_upgrade(
         co_return;
     }
 
-    co_await websocket_service.accept(
+    co_await ws.accept(
         *ctx.authenticated_iid,
         std::move(socket),
         std::move(request)
@@ -62,7 +62,7 @@ asio::awaitable<void> handle_ws_upgrade(
 asio::awaitable<void> session(
     tcp::socket socket,
     Router& router,
-    WebSocket& websocket_service
+    WebSocket& ws
 ) {
     beast::flat_buffer buffer;
 
@@ -91,7 +91,7 @@ asio::awaitable<void> session(
             co_await handle_ws_upgrade(
                 std::move(socket),
                 std::move(request),
-                websocket_service
+                ws
             );
 
             co_return;
@@ -122,7 +122,7 @@ asio::awaitable<void> session(
 asio::awaitable<void> listen(
     asio::io_context& io,
     Router& router,
-    WebSocket& websocket_service
+    WebSocket& ws
 ) {
     tcp::acceptor acceptor(
         io,
@@ -136,7 +136,7 @@ asio::awaitable<void> listen(
 
         asio::co_spawn(
             io,
-            session(std::move(socket), router, websocket_service),
+            session(std::move(socket), router, ws),
             asio::detached
         );
     }
@@ -149,18 +149,18 @@ int main() {
         4
     };
 
-    WebSocket websocket_service;
+    WebSocket ws;
 
     std::vector<std::shared_ptr<Middleware>> auth_check;
     auth_check.push_back(std::make_shared<AuthMiddleware>());
 
     Router router{};
-    router.register_path("/health-check", std::make_unique<HealthCheckController>(db));
+    router.register_path("/health-check", std::make_unique<HealthCheckController>(db, ws));
     router.register_path("/get-challenge", std::make_unique<GetChallengeController>(db));
     router.register_path("/validate-challenge", std::make_unique<ValidateChallengeController>(db));
     router.register_path(
         "/messages",
-        std::make_unique<MessagesController>(db),
+        std::make_unique<MessagesController>(db, ws),
         auth_check
     );
 
@@ -172,7 +172,7 @@ int main() {
 
     asio::co_spawn(
         io,
-        listen(io, router, websocket_service),
+        listen(io, router, ws),
         asio::detached
     );
 

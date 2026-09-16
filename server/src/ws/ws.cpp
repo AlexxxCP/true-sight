@@ -38,7 +38,7 @@ asio::awaitable<void> WebSocket::accept(
 
 void WebSocket::notify(
     std::string user_iid,
-    boost::json::object message
+    const boost::json::object& message
 ) {
     auto it = sessions_.find(user_iid);
 
@@ -49,4 +49,14 @@ void WebSocket::notify(
     it->second->notify(
         std::move(message)
     );
+}
+
+void WebSocket::notify_all(
+    const boost::json::object& message
+) {
+    for (auto& [user, session] : sessions_) {
+        session->notify(
+            message
+        );
+    }
 }

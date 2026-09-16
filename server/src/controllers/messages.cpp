@@ -34,11 +34,14 @@ AsyncResponse MessagesController::GET(RequestContext& ctx) {
         : 0;
 
     auto conversation_res = co_await db_.exec_async(
+        "SELECT * FROM ("
         "SELECT * FROM messages WHERE "
         "((sender_iid = $1 AND receiver_iid = $2) OR "
         "(receiver_iid = $1 AND sender_iid = $2)) "
-        "ORDER BY created_at "
-        "LIMIT $3 OFFSET $4;",
+        "ORDER BY created_at DESC, message_id DESC "
+        "LIMIT $3 OFFSET $4"
+        ") AS recent_messages "
+        "ORDER BY created_at ASC, message_id ASC;",
         pqxx::params{from, *to, limit, offset},
         asio::use_awaitable
     );
@@ -104,6 +107,22 @@ constexpr std::array message_create{
     Field{"protocol_version", boost::json::kind::int64},
     Field{"message_counter", boost::json::kind::int64}
 };
+
+void MessagesController::message_created(
+    RequestContext& ctx,
+    std::string message_id,
+    std::string sender_iid,
+    std::string receiver_iid
+) {
+    boost::json::object notification = {
+        {"event", "message_created"},
+        {"message_id", message_id},
+        {"sender_iid", sender_iid},
+        {"receiver_iid", receiver_iid}
+    };
+
+    ws_.notify(receiver_iid, notification);
+}
 
 AsyncResponse MessagesController::POST(RequestContext& ctx) {
     boost::json::value body;
@@ -178,14 +197,17 @@ AsyncResponse MessagesController::POST(RequestContext& ctx) {
         auth_tag.size()
     };
 
-    co_await db_.exec_async(
+    auto res = co_await db_.exec_async(
         "INSERT INTO messages "
         "(sender_iid, receiver_iid, nonce, ciphertext, auth_tag, protocol_version, message_counter) "
-        "VALUES ($1, $2, $3, $4, $5, $6, $7);",
+        "VALUES ($1, $2, $3, $4, $5, $6, $7) "
+        "RETURNING message_id;",
         {from, to, nonce_bytes, ciphertext_bytes, auth_tag_bytes, protocol_version, message_counter},
         asio::use_awaitable
     );
 
+    auto message_id = res[0]["message_id"].as<std::string>();
+    message_created(ctx, std::move(message_id), from, to);
+
     co_return responses::json(ctx, http::status::ok, {{ "status", "ok" }});
 }
-

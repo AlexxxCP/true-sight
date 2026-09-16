@@ -5,11 +5,11 @@
 
 
 QString AppSettings::accessToken() const {
-    return settings_.value("access_token").toString();
+    return access_token_;
 }
 
 void AppSettings::setAccessToken(const QString& token) {
-    settings_.setValue("access_token", token);
+    access_token_ = token;
 }
 
 void AppSettings::setLoggedIn(bool status) {
@@ -21,13 +21,17 @@ bool AppSettings::loggedIn() const {
 }
 
 QString AppSettings::username() const {
-    return settings_.value("username").toString();
+    return username_;
 }
 
 QString AppSettings::backendUrl() const {
     return settings_.value("backend_url").toString();
 }
 
+QString AppSettings::wsUrl() const {
+    return settings_.value("ws_url").toString();
+}
+
 void AppSettings::setUsername(const QString& username) {
-    settings_.setValue("username", username);
+    username_ = username;
 }

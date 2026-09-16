@@ -265,6 +265,18 @@ void MessengerController::sendMessage(QString message)
     );
 }
 
+void MessengerController::onMessageReceived(const QString& peer) {
+    if (peer_ != peer) {
+        return;
+    }
+
+    QCoro::connect(
+        loadMessagesAsync(std::move(peer)),
+        this,
+        [] {}
+    );
+}
+
 QCoro::Task<> MessengerController::sendMessageAsync(QString peer, QString message) {
     try {
         auto other_user_keys = identity_keys_.get_user_pk(peer.toStdString());

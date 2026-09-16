@@ -59,9 +59,11 @@ target_link_libraries(TrueSightClient PRIVATE
     Qt6::WebSockets
     OpenSSL::SSL
     OpenSSL::Crypto
+
     QCoro6::Core
     QCoro6::Network
     QCoro6::Coro
+    QCoro6::WebSockets
 )
 
 option(ENABLE_ASAN "Enable AddressSanitizer" OFF)

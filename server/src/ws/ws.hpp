@@ -1,0 +1,27 @@
+#pragma once
+
+#include "ws/ws_session.hpp"
+
+#include <boost/asio/awaitable.hpp>
+#include <boost/beast/http/string_body_fwd.hpp>
+#include <unordered_map>
+
+class WebSocket {
+public:
+    asio::awaitable<void> accept(
+        std::string user_iid,
+        tcp::socket socket,
+        http::request<http::string_body> request
+    );
+
+    void notify(
+        std::string user_iid,
+        boost::json::object message
+    );
+
+private:
+    std::unordered_map<
+        std::string,
+        std::shared_ptr<WebSocketSession>
+    > sessions_;
+};

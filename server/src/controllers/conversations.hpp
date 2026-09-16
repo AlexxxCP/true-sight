@@ -9,7 +9,6 @@ class ConversationsController : public Controller {
             db_{db} {}
 
         AsyncResponse GET(RequestContext& request) override;
-
     private:
         Database& db_;
 };

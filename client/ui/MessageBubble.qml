@@ -5,7 +5,7 @@ Item {
     id: root
 
     property string messageText: ""
-    property string timestamp: ""
+    property var timestamp: null
     property bool sentByMe: false
 
     implicitHeight: bubble.height
@@ -15,7 +15,10 @@ Item {
         anchors.right: root.sentByMe ? parent.right : undefined
         anchors.left: root.sentByMe ? undefined : parent.left
         width: Math.min(root.width * 0.72,
-                        Math.max(110, Math.min(messageLabel.implicitWidth + 28, 500)))
+                        Math.max(110, Math.min(
+                            Math.max(messageLabel.implicitWidth,
+                                     timestampLabel.implicitWidth) + 28,
+                            500)))
         height: messageColumn.implicitHeight + 20
         radius: 12
         color: root.sentByMe ? "#2f6db3" : "#eef1f5"
@@ -37,8 +40,11 @@ Item {
             }
 
             Label {
-                visible: root.timestamp.length > 0
-                text: root.timestamp
+                id: timestampLabel
+                visible: root.timestamp !== null
+                text: root.timestamp !== null
+                    ? Qt.formatDateTime(root.timestamp, "dd MMM yyyy, HH:mm")
+                    : ""
                 color: root.sentByMe ? "#dbeafe" : "#667085"
                 font.pixelSize: 11
             }

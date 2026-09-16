@@ -36,9 +36,9 @@ Pane {
 
             delegate: MessageBubble {
                 width: messageView.width
-                messageText: modelData.ciphertext || ""
+                messageText: modelData.message_text || ""
                 sentByMe: modelData.receiver_iid === root.conversationName
-                timestamp: modelData.created_at || ""
+                timestamp: modelData.created_at || null
             }
 
             Label {

@@ -1,6 +1,5 @@
 #include "crypto/crypto.hpp"
 
-#include <filesystem>
 #include <memory>
 #include <stdexcept>
 
@@ -66,6 +65,7 @@ std::vector<unsigned char> sign_ed25519_with_key(
 
 } // namespace
 
+
 std::string base64url_encode(std::span<const unsigned char> input) {
     size_t encoded_size = 4 * ((input.size() + 2) / 3);
 
@@ -91,6 +91,24 @@ std::string base64url_encode(std::span<const unsigned char> input) {
     }
 
     return result;
+}
+
+std::vector<crypto::u8> decodeBase64Url(const QString& text) {
+    const auto decoded = QByteArray::fromBase64Encoding(
+        text.toUtf8(),
+        QByteArray::Base64UrlEncoding |
+            QByteArray::AbortOnBase64DecodingErrors
+    );
+
+    if (!decoded) {
+        throw std::runtime_error("Invalid base64url");
+    }
+
+    const QByteArray& raw = *decoded;
+    const auto* first =
+        reinterpret_cast<const crypto::u8*>(raw.constData());
+
+    return {first, first + raw.size()};
 }
 
 std::vector<unsigned char> sign_ed25519(

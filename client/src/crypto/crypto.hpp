@@ -4,11 +4,13 @@
 #include <span>
 #include <openssl/evp.h>
 #include <array>
+#include <QString>
 #include <optional>
 
 namespace crypto {
 
 using u8 = uint8_t;
+const std::string hkdf_salt = "true-sight-v1/x25519-hkdf";
 
 std::vector<unsigned char> sign_ed25519(
     const std::vector<uint8_t>& private_key,
@@ -16,6 +18,8 @@ std::vector<unsigned char> sign_ed25519(
 );
 
 std::string base64url_encode(std::span<const unsigned char> input);
+
+std::vector<crypto::u8> decodeBase64Url(const QString& text);
 
 std::array<u8, 32> x25519_shared_secret(
     std::span<const u8, 32> sk,

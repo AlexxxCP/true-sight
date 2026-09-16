@@ -43,7 +43,7 @@ Pane {
                 width: conversationView.width
                 personName: modelData.peer || ""
                 previewText: ""
-                timestamp: modelData.last_message_at || ""
+                timestamp: modelData.last_message_at || null
                 unreadCount: 0
 
                 MouseArea {

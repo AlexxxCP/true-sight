@@ -60,6 +60,13 @@ private:
     QCoro::Task<> loadMessagesAsync(QString peer);
     QCoro::Task<> sendMessageAsync(QString peer, QString message);
 
+    struct Message {
+        QString senderIid;
+        QString receiverIid;
+        QString text;
+        QString createdAt;
+    };
+
     IdentityKeys& identity_keys_;
     AppSettings& app_settings_;
     HttpClient http_client_;

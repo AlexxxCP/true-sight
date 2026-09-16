@@ -1,5 +1,10 @@
+#include <boost/asio/awaitable.hpp>
+#include <boost/beast/http/message_fwd.hpp>
+#include <boost/beast/http/string_body_fwd.hpp>
+#include <boost/beast/websocket/impl/rfc6455.hpp>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "controllers/conversations.hpp"
@@ -12,6 +17,7 @@
 #include "http/router.hpp"
 #include "middleware/auth_middleware.hpp"
 #include "shared.hpp"
+#include "ws/ws.hpp"
 
 const std::size_t PORT = 8888;
 const std::string CONNECTION_STRING =
@@ -21,7 +27,43 @@ const std::string CONNECTION_STRING =
     "user=true_sight "
     "password=true_sight";
 
-asio::awaitable<void> session(tcp::socket socket, Router& router) {
+
+asio::awaitable<void> handle_ws_upgrade(
+    tcp::socket socket,
+    http::request<http::string_body> request,
+    WebSocket& websocket_service
+) {
+    auto ctx = RequestContext{
+        .request = request
+    };
+
+    AuthMiddleware auth_check;
+    auto res = co_await auth_check.handle(ctx);
+
+    if (res.has_value()) {
+        beast::error_code ec;
+
+        co_await beast::async_write(
+            socket,
+            std::move(*res),
+            asio::redirect_error(asio::use_awaitable, ec)
+        );
+
+        co_return;
+    }
+
+    co_await websocket_service.accept(
+        *ctx.authenticated_iid,
+        std::move(socket),
+        std::move(request)
+    );
+}
+
+asio::awaitable<void> session(
+    tcp::socket socket,
+    Router& router,
+    WebSocket& websocket_service
+) {
     beast::flat_buffer buffer;
 
     for (;;) {
@@ -39,6 +81,19 @@ asio::awaitable<void> session(tcp::socket socket, Router& router) {
         }
 
         if (ec) {
+            co_return;
+        }
+
+        if (
+            request.target() == "/ws" &&
+            websocket::is_upgrade(request)
+        ) {
+            co_await handle_ws_upgrade(
+                std::move(socket),
+                std::move(request),
+                websocket_service
+            );
+
             co_return;
         }
 
@@ -64,7 +119,11 @@ asio::awaitable<void> session(tcp::socket socket, Router& router) {
     auto _ = socket.shutdown(tcp::socket::shutdown_send, ec);
 }
 
-asio::awaitable<void> listen(asio::io_context& io, Router& context) {
+asio::awaitable<void> listen(
+    asio::io_context& io,
+    Router& router,
+    WebSocket& websocket_service
+) {
     tcp::acceptor acceptor(
         io,
         tcp::endpoint(tcp::v4(), PORT)
@@ -77,7 +136,7 @@ asio::awaitable<void> listen(asio::io_context& io, Router& context) {
 
         asio::co_spawn(
             io,
-            session(std::move(socket), context),
+            session(std::move(socket), router, websocket_service),
             asio::detached
         );
     }
@@ -89,6 +148,8 @@ int main() {
         CONNECTION_STRING,
         4
     };
+
+    WebSocket websocket_service;
 
     std::vector<std::shared_ptr<Middleware>> auth_check;
     auth_check.push_back(std::make_shared<AuthMiddleware>());
@@ -111,7 +172,7 @@ int main() {
 
     asio::co_spawn(
         io,
-        listen(io, router),
+        listen(io, router, websocket_service),
         asio::detached
     );
 

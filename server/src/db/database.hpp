@@ -53,17 +53,18 @@ auto Database::exec_async(std::string query, pqxx::params params, CompletionToke
         params = std::move(params)] (auto handler) mutable {
             auto executor = asio::get_associated_executor(handler);
             auto work_guard = asio::make_work_guard(executor);
+            auto connection_string = connection_string_;
 
             asio::post(
                 pool_,
-                [this,
+                [connection_string = std::move(connection_string),
                 query = std::move(query),
                 params = std::move(params),
                 handler = std::move(handler),
                 executor = std::move(executor),
                 work_guard = std::move(work_guard)] () mutable {
                     try {
-                        thread_local DatabaseConnection db_conn{connection_string_};
+                        thread_local DatabaseConnection db_conn{connection_string};
                         pqxx::result res = db_conn.exec(query, params);
 
                         asio::post(

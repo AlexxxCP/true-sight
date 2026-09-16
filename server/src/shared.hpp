@@ -17,6 +17,7 @@ using u8 = uint8_t;
 namespace asio = boost::asio;
 namespace beast = boost::beast;
 namespace http = beast::http;
+namespace websocket = beast::websocket;
 
 using tcp = asio::ip::tcp;
 

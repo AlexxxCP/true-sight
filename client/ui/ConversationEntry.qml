@@ -7,7 +7,7 @@ Item {
 
     property string personName: ""
     property string previewText: ""
-    property string timestamp: ""
+    property var timestamp: null
     property int unreadCount: 0
     property bool selected: false
 
@@ -41,6 +41,7 @@ Item {
 
         ColumnLayout {
             Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter
             spacing: 2
 
             Label {
@@ -53,6 +54,7 @@ Item {
 
             Label {
                 Layout.fillWidth: true
+                visible: root.previewText.length > 0
                 text: root.previewText
                 elide: Text.ElideRight
                 color: "#667085"
@@ -60,11 +62,15 @@ Item {
         }
 
         ColumnLayout {
-            Layout.alignment: Qt.AlignTop
+            Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
             spacing: 5
 
             Label {
-                text: root.timestamp
+                Layout.alignment: Qt.AlignRight
+                text: root.timestamp !== null
+                    ? Qt.formatDateTime(root.timestamp, "dd MMM, HH:mm")
+                    : ""
+                horizontalAlignment: Text.AlignRight
                 color: "#667085"
                 font.pixelSize: 12
             }

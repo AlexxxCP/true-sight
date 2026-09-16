@@ -20,6 +20,7 @@ qcoro_enable_coroutines()
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/utils/*.cpp"
 )
 
 file(GLOB_RECURSE QML_FILES
@@ -50,6 +51,7 @@ endif()
 
 target_include_directories(TrueSightClient PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 target_link_libraries(TrueSightClient PRIVATE
     Qt6::Quick
@@ -103,6 +105,4 @@ if(ENABLE_UBSAN)
         -fsanitize=undefined
     )
 endif()
-
-
 

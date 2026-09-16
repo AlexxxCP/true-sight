@@ -1,0 +1,84 @@
+name: Build macOS Client
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          brew update
+          brew install qt@6 openssl cmake ninja create-dmg
+
+      - name: Configure
+        run: |
+          cmake -S client \
+            -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$(brew --prefix qt@6)"
+
+      - name: Build
+        run: |
+          cmake --build build --config Release --verbose
+
+      - name: Find application
+        id: find_app
+        run: |
+          APP=$(find build -name "*.app" -type d | head -n 1)
+          if [ -z "$APP" ]; then
+            echo "ERROR: No .app bundle found!"
+            exit 1
+          fi
+          echo "Found: $APP"
+          echo "app_path=$APP" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy Qt frameworks into bundle
+        run: |
+          QT_PREFIX="$(brew --prefix qt@6)"
+          "$QT_PREFIX/bin/macdeployqt" "${{ steps.find_app.outputs.app_path }}" \
+            -qmldir=client/ui \
+            -always-overwrite \
+            -verbose=1
+
+      - name: Package as single .app
+        run: |
+          mkdir -p package
+          cp -R "${{ steps.find_app.outputs.app_path }}" package/TrueSight.app
+
+      - name: Create DMG
+        run: |
+          create-dmg \
+            --volname "TrueSight" \
+            --app-drop-link 450 150 \
+            --window-size 700 400 \
+            "package/TrueSight-macOS.dmg" \
+            "package/TrueSight.app" || true
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TrueSight-macOS
+          path: package/TrueSight-macOS.dmg
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: package/TrueSight-macOS.dmg
+          draft: false
+          generate_release_notes: true

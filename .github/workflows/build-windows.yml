@@ -1,0 +1,121 @@
+name: Build Windows Client
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.8.0"
+          modules: "qtwebsockets"
+          cache: true
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Setup vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git ${{ github.workspace }}/vcpkg
+          ${{ github.workspace }}/vcpkg/bootstrap-vcpkg.bat
+        shell: pwsh
+
+      - name: Install OpenSSL via vcpkg
+        run: ${{ github.workspace }}/vcpkg/vcpkg.exe install openssl:x64-windows
+        shell: pwsh
+
+      - name: Configure
+        run: |
+          cmake -S client -B build -G "Ninja" `
+            -DCMAKE_C_COMPILER=cl `
+            -DCMAKE_CXX_COMPILER=cl `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR" `
+            -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake" `
+            -DVCPKG_TARGET_TRIPLET=x64-windows
+        shell: pwsh
+
+      - name: Build
+        run: cmake --build build --config Release --verbose
+
+      - name: Find executable
+        id: find_exe
+        run: |
+          $exe = Get-ChildItem -Path build -Recurse -Filter "TrueSightClient.exe" | Select-Object -First 1
+          if (-not $exe) {
+            Write-Error "No .exe found!"
+            exit 1
+          }
+          echo "exe_path=$($exe.FullName)" >> $env:GITHUB_OUTPUT
+          echo "exe_dir=$($exe.DirectoryName)" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+
+      - name: Deploy Qt dependencies
+        run: |
+          & "$env:QT_ROOT_DIR\bin\windeployqt.exe" `
+            --qmldir client\ui `
+            --release `
+            "${{ steps.find_exe.outputs.exe_path }}"
+        shell: pwsh
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y
+
+      - name: Create installer script
+        run: |
+          $dir = "${{ steps.find_exe.outputs.exe_dir }}"
+          @"
+          [Setup]
+          AppName=TrueSight
+          AppVersion=1.0
+          DefaultDirName={autopf}\TrueSight
+          DefaultGroupName=TrueSight
+          OutputDir=package
+          OutputBaseFilename=TrueSight-Setup
+          Compression=lzma2
+          SolidCompression=yes
+          ArchitecturesInstallIn64BitMode=x64
+
+          [Files]
+          Source: "$dir\*"; DestDir: "{app}"; Flags: recursesubdirs
+
+          [Icons]
+          Name: "{group}\TrueSight"; Filename: "{app}\TrueSightClient.exe"
+          Name: "{autodesktop}\TrueSight"; Filename: "{app}\TrueSightClient.exe"
+          "@ | Out-File -FilePath installer.iss -Encoding utf8
+        shell: pwsh
+
+      - name: Build installer
+        run: |
+          New-Item -ItemType Directory -Force -Path package
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
+        shell: pwsh
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TrueSight-Windows
+          path: package/TrueSight-Setup.exe
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: package/TrueSight-Setup.exe
+          draft: false
+          generate_release_notes: true

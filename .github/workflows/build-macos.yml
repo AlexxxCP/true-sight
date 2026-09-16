@@ -55,6 +55,20 @@ jobs:
             -always-overwrite \
             -verbose=1
 
+      - name: Repair and verify app signatures
+        run: |
+          APP="${{ steps.find_app.outputs.app_path }}"
+          find "$APP/Contents" -type f \( -name '*.dylib' -o -name '*.so' \) -print0 |
+            while IFS= read -r -d '' library; do
+              codesign --force --sign - "$library"
+            done
+          find "$APP/Contents/Frameworks" -type d -name '*.framework' -print0 |
+            while IFS= read -r -d '' framework; do
+              codesign --force --sign - "$framework"
+            done
+          codesign --force --sign - "$APP"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+
       - name: Package as single .app
         run: |
           mkdir -p package
@@ -67,7 +81,7 @@ jobs:
             --app-drop-link 450 150 \
             --window-size 700 400 \
             "package/TrueSight-macOS.dmg" \
-            "package/TrueSight.app" || true
+            "package/TrueSight.app"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4

@@ -94,29 +94,6 @@ std::string base64url_encode(std::span<const unsigned char> input) {
 }
 
 std::vector<unsigned char> sign_ed25519(
-    const std::filesystem::path& private_key_path,
-    std::span<const unsigned char> msg
-) {
-    FILE* file = std::fopen(private_key_path.c_str(), "rb");
-    if (!file) {
-        throw std::runtime_error("failed to open private key");
-    }
-
-    PKeyPtr key(
-        PEM_read_PrivateKey(file, nullptr, nullptr, nullptr),
-        &EVP_PKEY_free
-    );
-
-    std::fclose(file);
-
-    if (!key) {
-        throw std::runtime_error("failed to read private key");
-    }
-
-    return sign_ed25519_with_key(key.get(), msg);
-}
-
-std::vector<unsigned char> sign_ed25519(
     const std::vector<uint8_t>& private_key,
     std::span<const unsigned char> msg
 ) {

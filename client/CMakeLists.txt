@@ -38,7 +38,7 @@ qt_add_qml_module(TrueSightClient
         ${QML_FILES}
 )
 
-if(APPLE)
+if(APPLE AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
     set_target_properties(TrueSightClient PROPERTIES
         MACOSX_BUNDLE TRUE
         MACOSX_BUNDLE_BUNDLE_NAME "TrueSight"

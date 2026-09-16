@@ -8,10 +8,10 @@ class AppSettings {
 
 public:
     AppSettings() {
-        const QByteArray backend_url = qgetenv("BACKEND_URL");
+        QByteArray backend_url = qgetenv("BACKEND_URL");
 
         if (backend_url.isEmpty()) {
-            throw std::runtime_error("BACKEND_URL variable is required");
+            backend_url = QByteArrayLiteral("http://localhost:8888");
         }
 
         settings_.setValue(

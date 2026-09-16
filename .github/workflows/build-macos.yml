@@ -41,18 +41,13 @@ jobs:
       - name: Package application
         run: |
           mkdir -p package
-
           APP=$(find build -name "*.app" -type d | head -n 1)
-
           if [ -z "$APP" ]; then
             echo "ERROR: No .app bundle found!"
             exit 1
           fi
-
           echo "Found: $APP"
-
           cp -R "$APP" package/TrueSight.app
-
           cd package
           zip -r TrueSight-macOS.zip TrueSight.app
 

@@ -38,10 +38,19 @@ qt_add_qml_module(TrueSightClient
         ${QML_FILES}
 )
 
+if(APPLE)
+    set_target_properties(TrueSightClient PROPERTIES
+        MACOSX_BUNDLE TRUE
+        MACOSX_BUNDLE_BUNDLE_NAME "TrueSight"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "com.truesight.client"
+        MACOSX_BUNDLE_BUNDLE_VERSION "1.0"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0"
+    )
+endif()
+
 target_include_directories(TrueSightClient PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
-
 target_link_libraries(TrueSightClient PRIVATE
     Qt6::Quick
     Qt6::Network

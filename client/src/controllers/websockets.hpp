@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QUrl>
 #include <QWebSocket>
+#include <cstdint>
 
 #include <qcorowebsockets.h>
 
@@ -25,10 +26,12 @@ signals:
     void messageReceived(const QString& peer);
 
 private:
-    QCoro::Task<> runAsync(QString token);
+    QCoro::Task<> runAsync(QString token, std::uint64_t generation);
     void handleMessage(const QString& message);
 
     QUrl url_;
     QWebSocket socket_;
     bool running_ = false;
+    std::uint64_t generation_ = 0;
+    QString pending_token_;
 };

@@ -1,12 +1,14 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Dialogs as Dialogs
 
 Rectangle {
     id: root
 
     required property string title
     property url selectedFile
+    property string acceptedSuffix: ""
 
     readonly property bool hasSelection: selectedFile.toString().length > 0
 
@@ -39,7 +41,9 @@ Rectangle {
             Layout.fillWidth: true
             text: root.hasSelection
                   ? root.fileName(root.selectedFile)
-                  : "Drop one local key file here"
+                  : root.acceptedSuffix.length > 0
+                    ? "Drop one local " + root.acceptedSuffix + " file or click to browse"
+                    : "Drop one local key file or click to browse"
             horizontalAlignment: Text.AlignHCenter
             elide: Text.ElideMiddle
             color: root.hasSelection ? "#285a9a" : "#667085"
@@ -48,7 +52,7 @@ Rectangle {
         Label {
             Layout.alignment: Qt.AlignHCenter
             visible: root.hasSelection
-            text: "Path selected"
+            text: "Click to choose another file"
             color: "#667085"
             font.pixelSize: 12
         }
@@ -66,11 +70,38 @@ Rectangle {
             if (droppedUrls.length !== 1)
                 return
 
+            const fileUrl = droppedUrls[0]
+            if (!fileUrl.toString().startsWith("file:") ||
+                (root.acceptedSuffix.length > 0 &&
+                 !root.fileName(fileUrl).toLowerCase().endsWith(root.acceptedSuffix)))
+                return
+
             // Keep only the URL/path. File contents are never opened in QML.
-            root.selectedFile = droppedUrls[0]
+            root.selectedFile = fileUrl
 
             // Never ask the source application to move a key file.
             drop.accept(Qt.CopyAction)
+        }
+    }
+
+    TapHandler {
+        onTapped: fileDialog.open()
+    }
+
+    Dialogs.FileDialog {
+        id: fileDialog
+        title: "Select " + root.title.toLowerCase() + " file"
+        fileMode: Dialogs.FileDialog.OpenFile
+        nameFilters: root.acceptedSuffix.length > 0
+                     ? ["TrueSight files (*" + root.acceptedSuffix + ")"]
+                     : ["All files (*)"]
+
+        onAccepted: {
+            if (selectedFile.toString().startsWith("file:") &&
+                (root.acceptedSuffix.length === 0 ||
+                 root.fileName(selectedFile).toLowerCase().endsWith(root.acceptedSuffix))) {
+                root.selectedFile = selectedFile
+            }
         }
     }
 }

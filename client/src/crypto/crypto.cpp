@@ -140,6 +140,24 @@ std::vector<unsigned char> sign_ed25519(
     return sign_ed25519_with_key(key.get(), msg);
 }
 
+bool verify_ed25519(
+    std::span<const uint8_t> public_key,
+    std::span<const uint8_t> msg,
+    std::span<const uint8_t> signature
+) {
+    if (public_key.size() != 32 || signature.size() != 64) {
+        return false;
+    }
+    PKeyPtr key(EVP_PKEY_new_raw_public_key(
+        EVP_PKEY_ED25519, nullptr, public_key.data(), public_key.size()
+    ), &EVP_PKEY_free);
+    MdContextPtr ctx(EVP_MD_CTX_new(), &EVP_MD_CTX_free);
+    return key && ctx &&
+        EVP_DigestVerifyInit(ctx.get(), nullptr, nullptr, nullptr, key.get()) == 1 &&
+        EVP_DigestVerify(ctx.get(), signature.data(), signature.size(),
+                         msg.data(), msg.size()) == 1;
+}
+
 std::array<uint8_t, 32> x25519_shared_secret(
     std::span<const uint8_t, 32> sk,
     std::span<const uint8_t, 32> pk

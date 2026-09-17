@@ -1,15 +1,21 @@
 #include "controllers/messenger.hpp"
 #include "crypto/crypto.hpp"
+#include "crypto/messages.hpp"
 #include "stores/identity_keys.hpp"
 #include "utils/dates.hpp"
 
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QJsonValue>
+#include <QCryptographicHash>
+#include <QSettings>
 #include <QUrl>
 #include <QUrlQuery>
 
 #include <stdexcept>
+#include <algorithm>
+#include <limits>
+#include <set>
 #include <utility>
 
 MessengerController::MessengerController(
@@ -36,6 +42,111 @@ QVariantList MessengerController::messages() const
 QString MessengerController::peer() const
 {
     return peer_;
+}
+
+void MessengerController::resetSession()
+{
+    ++session_generation_;
+    ++load_generation_;
+    conversations_.clear();
+    messages_.clear();
+    peer_.clear();
+    imported_peers_.clear();
+    emit conversationsChanged();
+    emit messagesChanged();
+    emit peerChanged();
+}
+
+void MessengerController::onAuthenticated()
+{
+    resetSession();
+    for (const auto& user : identity_keys_.peer_usernames()) {
+        const auto peer = QString::fromStdString(user);
+        imported_peers_.insert(peer);
+        QVariantMap row;
+        row["peer"] = peer;
+        conversations_.push_back(row);
+    }
+    emit conversationsChanged();
+    loadConversations();
+}
+
+QString MessengerController::addConversationFromShare(const QUrl& file)
+{
+    try {
+        const QString imported_peer = QString::fromStdString(identity_keys_.import_share(file));
+        imported_peers_.insert(imported_peer);
+
+        const auto found = std::any_of(conversations_.begin(), conversations_.end(),
+            [&imported_peer](const QVariant& conversation) {
+                return conversation.toMap().value("peer").toString() == imported_peer;
+            });
+        if (!found) {
+            QVariantMap row;
+            row["peer"] = imported_peer;
+            conversations_.prepend(row);
+            emit conversationsChanged();
+        }
+        openConversation(imported_peer);
+        return {};
+    } catch (const std::exception& error) {
+        return QString::fromUtf8(error.what());
+    }
+}
+
+namespace {
+QByteArray clock_identity(const IdentityKeys& keys) {
+    QByteArray identity = QByteArray::fromStdString(keys.current_username());
+    identity.append('\0');
+    const auto public_key = keys.ed25519_pk();
+    identity.append(reinterpret_cast<const char*>(public_key.data()), public_key.size());
+    return identity;
+}
+
+QString legacy_clock_key(const IdentityKeys& keys) {
+    return "lamport/" + QString::fromLatin1(
+        QCryptographicHash::hash(clock_identity(keys), QCryptographicHash::Sha256).toHex()
+    );
+}
+
+QString clock_key(const IdentityKeys& keys, const QString& peer) {
+    QByteArray identity = clock_identity(keys);
+    identity.append('\0');
+    identity.append(peer.toUtf8());
+    return "lamport/conversation/" + QString::fromLatin1(
+        QCryptographicHash::hash(identity, QCryptographicHash::Sha256).toHex()
+    );
+}
+}
+
+std::uint64_t MessengerController::clock(const QString& peer) const {
+    QSettings settings{"TrueSight", "TrueSightClient"};
+    bool valid = false;
+    const auto key = clock_key(identity_keys_, peer);
+    // Existing installations had one identity-wide clock. Seed each
+    // conversation once so previously signed messages remain ordered.
+    const auto stored = settings.contains(key)
+        ? settings.value(key) : settings.value(legacy_clock_key(identity_keys_), "0");
+    const auto value = stored.toString().toULongLong(&valid);
+    if (!valid || value >= static_cast<std::uint64_t>(std::numeric_limits<qint64>::max())) {
+        throw std::runtime_error("Invalid or exhausted Lamport clock");
+    }
+    return value;
+}
+
+std::uint64_t MessengerController::tick(const QString& peer, std::uint64_t observed) {
+    const auto next = std::max(clock(peer), observed) + 1;
+    if (next > static_cast<std::uint64_t>(std::numeric_limits<qint64>::max())) {
+        throw std::runtime_error("Lamport clock exhausted");
+    }
+
+    QSettings settings{"TrueSight", "TrueSightClient"};
+    settings.setValue(clock_key(identity_keys_, peer), QString::number(next));
+    settings.sync();
+    if (settings.status() != QSettings::NoError) {
+        throw std::runtime_error("Could not persist Lamport clock");
+    }
+    return next;
 }
 
 void MessengerController::loadConversations()
@@ -70,11 +181,15 @@ void MessengerController::openConversation(QString peer)
 
 QCoro::Task<> MessengerController::loadConversationsAsync()
 {
+    const auto session = session_generation_;
     try {
         const auto json = co_await http_client_.get(
             app_settings_.backendUrl() + "/conversations",
             app_settings_.accessToken()
         );
+        if (session != session_generation_) {
+            co_return;
+        }
 
         const QJsonValue value = json.value("conversations");
         if (!value.isArray()) {
@@ -102,10 +217,23 @@ QCoro::Task<> MessengerController::loadConversationsAsync()
             parsed_conversations.push_back(row);
         }
 
+        for (const auto& imported_peer : imported_peers_) {
+            const auto found = std::any_of(parsed_conversations.begin(), parsed_conversations.end(),
+                [&imported_peer](const QVariant& conversation) {
+                    return conversation.toMap().value("peer").toString() == imported_peer;
+                });
+            if (!found) {
+                QVariantMap row;
+                row["peer"] = imported_peer;
+                parsed_conversations.push_back(row);
+            }
+        }
         conversations_ = std::move(parsed_conversations);
         emit conversationsChanged();
     } catch (const std::exception& error) {
-        emit conversationsLoadFailed(QString::fromUtf8(error.what()));
+        if (session == session_generation_) {
+            emit conversationsLoadFailed(QString::fromUtf8(error.what()));
+        }
     }
 
     co_return;
@@ -113,6 +241,7 @@ QCoro::Task<> MessengerController::loadConversationsAsync()
 
 QCoro::Task<> MessengerController::loadMessagesAsync(QString peer)
 {
+    const auto generation = ++load_generation_;
     try {
         QUrl url{app_settings_.backendUrl() + "/messages"};
         QUrlQuery query;
@@ -130,7 +259,7 @@ QCoro::Task<> MessengerController::loadMessagesAsync(QString peer)
             throw std::runtime_error("messages is not an array");
         }
 
-        if (peer != peer_) {
+        if (peer != peer_ || generation != load_generation_) {
             co_return;
         }
 
@@ -189,7 +318,15 @@ QCoro::Task<> MessengerController::loadMessagesAsync(QString peer)
             }
         );
 
-        QVariantList decrypted_messages;
+        struct VerifiedRow {
+            std::uint64_t counter;
+            QString sender;
+            QString signature;
+            QVariantMap data;
+        };
+        std::vector<VerifiedRow> verified_messages;
+        std::set<QString> seen_signatures;
+        std::uint64_t maximum_received = 0;
         for (const auto& msg : messages) {
             if (!msg.isObject()) {
                 throw std::runtime_error("Message is not an object");
@@ -211,12 +348,45 @@ QCoro::Task<> MessengerController::loadMessagesAsync(QString peer)
                 throw std::runtime_error("Message participants do not match the conversation");
             }
 
+            const auto version_value = object.value("protocol_version");
+            const auto counter_value = object.value("message_counter");
+            if (!version_value.isDouble() || version_value.toInteger() != 2 ||
+                !counter_value.isDouble()) {
+                throw std::runtime_error("Unsupported or missing signed message protocol");
+            }
+            const auto counter = counter_value.toInteger();
+            if (counter <= 0) {
+                throw std::runtime_error("Invalid Lamport clock");
+            }
+
             auto nonce = crypto::decodeBase64Url(object.value("nonce").toString());
             auto auth_tag = crypto::decodeBase64Url(object.value("auth_tag").toString());
             auto ciphertext = crypto::decodeBase64Url(object.value("ciphertext").toString());
+            const auto signature_text = object.value("signature");
+            if (!signature_text.isString()) {
+                throw std::runtime_error("Message signature is missing");
+            }
+            auto signature = crypto::decodeBase64Url(signature_text.toString());
 
             if (nonce.size() != 12 || auth_tag.size() != 16)
                 throw std::runtime_error("Invalid nonce or auth tag size");
+
+            const auto envelope = crypto::messages::signed_envelope(
+                sender.toStdString(), receiver.toStdString(),
+                static_cast<std::uint64_t>(counter), nonce, ciphertext, auth_tag
+            );
+            const auto signer_key = sent_by_me
+                ? identity_keys_.ed25519_pk() : other_user_keys->ed25519_pk;
+            if (!crypto::verify_ed25519(signer_key, envelope, signature)) {
+                throw std::runtime_error("Message signature verification failed");
+            }
+            const auto canonical_signature = QString::fromStdString(
+                crypto::base64url_encode(signature)
+            );
+            if (!seen_signatures.insert(canonical_signature).second) {
+                continue;
+            }
+            maximum_received = std::max(maximum_received, static_cast<std::uint64_t>(counter));
 
             auto decrypted_msg = crypto::aes_256_gcm_siv_decrypt(
                 sent_by_me ? my_encryption_key : their_encryption_key,
@@ -239,10 +409,28 @@ QCoro::Task<> MessengerController::loadMessagesAsync(QString peer)
                 utils::parseDate(object.value("created_at").toString());
             row["receiver_iid"] = receiver;
 
-            decrypted_messages.push_back(row);
+            verified_messages.push_back({static_cast<std::uint64_t>(counter),
+                                         sender, canonical_signature, row});
         }
 
-        messages_ = decrypted_messages;
+        if (peer != peer_ || generation != load_generation_) {
+            co_return;
+        }
+        // A refresh of already observed history is not a new receive event.
+        if (maximum_received > 0 && maximum_received >= clock(peer)) {
+            tick(peer, maximum_received);
+        }
+
+        std::sort(verified_messages.begin(), verified_messages.end(),
+            [](const VerifiedRow& a, const VerifiedRow& b) {
+                return std::tie(a.counter, a.sender, a.signature) <
+                       std::tie(b.counter, b.sender, b.signature);
+            });
+        QVariantList decrypted_messages;
+        for (const auto& verified : verified_messages) {
+            decrypted_messages.push_back(verified.data);
+        }
+        messages_ = std::move(decrypted_messages);
         emit messagesChanged();
     } catch (const std::exception& error) {
         if (peer == peer_) {
@@ -278,7 +466,11 @@ void MessengerController::onMessageReceived(const QString& peer) {
 }
 
 QCoro::Task<> MessengerController::sendMessageAsync(QString peer, QString message) {
+    const auto session = session_generation_;
     try {
+        if (peer.isEmpty() || message.isEmpty()) {
+            throw std::runtime_error("No recipient or message");
+        }
         auto other_user_keys = identity_keys_.get_user_pk(peer.toStdString());
         if (!other_user_keys.has_value()) {
             throw std::runtime_error("peer not found");
@@ -325,6 +517,13 @@ QCoro::Task<> MessengerController::sendMessageAsync(QString peer, QString messag
             {}
         );
 
+        const auto counter = tick(peer);
+        const auto envelope = crypto::messages::signed_envelope(
+            identity_keys_.current_username(), peer.toStdString(), counter,
+            encrypted_message.nonce, encrypted_message.ciphertext, encrypted_message.tag
+        );
+        const auto signature = crypto::sign_ed25519(identity_keys_.ed25519_sk(), envelope);
+
         // {
         //      "to": "Alice",
         //      "nonce": <base64encoded>,
@@ -357,8 +556,9 @@ QCoro::Task<> MessengerController::sendMessageAsync(QString peer, QString messag
             {"nonce", nonce },
             {"ciphertext", ciphertext },
             {"auth_tag", auth_tag },
-            {"protocol_version", 1},
-            {"message_counter", 1}
+            {"signature", QString::fromStdString(crypto::base64url_encode(signature))},
+            {"protocol_version", 2},
+            {"message_counter", static_cast<qint64>(counter)}
         };
 
         QUrl url{app_settings_.backendUrl() + "/messages"};
@@ -367,6 +567,9 @@ QCoro::Task<> MessengerController::sendMessageAsync(QString peer, QString messag
             message_data,
             app_settings_.accessToken()
         );
+        if (session != session_generation_) {
+            co_return;
+        }
 
         const QJsonValue status = json.value("status");
         if (!status.isString() || status.toString() != "ok") {
@@ -379,9 +582,11 @@ QCoro::Task<> MessengerController::sendMessageAsync(QString peer, QString messag
 
         co_await loadMessagesAsync(peer);
 
-        emit messageSent();
+        if (session == session_generation_) {
+            emit messageSent();
+        }
     } catch (const std::exception& error) {
-        if (peer == peer_) {
+        if (session == session_generation_ && peer == peer_) {
             emit messageSentFailed(QString::fromUtf8(error.what()));
         }
     }

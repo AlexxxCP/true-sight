@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Controls.Basic as Basic
 
 Pane {
     id: root
@@ -29,6 +30,33 @@ Pane {
 
         ConversationFilterInput {
             Layout.fillWidth: true
+        }
+
+        Basic.Button {
+            id: addConversationButton
+            Layout.fillWidth: true
+            implicitHeight: 38
+            text: "Add conversation +"
+
+            contentItem: Text {
+                text: addConversationButton.text
+                color: "#285a9a"
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                font.weight: Font.DemiBold
+            }
+
+            background: Rectangle {
+                radius: 7
+                color: addConversationButton.hovered ? "#eff6ff" : "#ffffff"
+                border.color: "#b9d6f7"
+            }
+
+            onClicked: {
+                shareFileField.selectedFile = ""
+                shareError.text = ""
+                addConversationDialog.open()
+            }
         }
 
         ListView {
@@ -60,6 +88,75 @@ Pane {
                 visible: conversationView.count === 0
                 text: "No conversations yet"
                 color: "#667085"
+            }
+        }
+    }
+
+    Dialog {
+        id: addConversationDialog
+        parent: Overlay.overlay
+        modal: true
+        title: "Add conversation"
+        width: Math.min(420, parent.width - 40)
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        standardButtons: Dialog.Cancel
+
+        ColumnLayout {
+            width: parent.width
+            spacing: 12
+
+            Label {
+                Layout.fillWidth: true
+                text: "Drop the other person's public key share file."
+                wrapMode: Text.WordWrap
+                color: "#667085"
+            }
+
+            KeyDropField {
+                id: shareFileField
+                Layout.fillWidth: true
+                title: "Public key"
+                acceptedSuffix: ".share"
+            }
+
+            Label {
+                id: shareError
+                Layout.fillWidth: true
+                visible: text.length > 0
+                wrapMode: Text.WordWrap
+                color: "#b42318"
+            }
+
+            Basic.Button {
+                id: addButton
+                Layout.fillWidth: true
+                implicitHeight: 40
+                text: "Add"
+                enabled: shareFileField.hasSelection
+
+                contentItem: Text {
+                    text: addButton.text
+                    color: "#ffffff"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    font.weight: Font.DemiBold
+                }
+
+                background: Rectangle {
+                    radius: 7
+                    color: addButton.enabled ? "#2f6db3" : "#98a2b3"
+                }
+
+                onClicked: {
+                    const error = messengerController.addConversationFromShare(
+                        shareFileField.selectedFile)
+                    if (error.length > 0) {
+                        shareError.text = error
+                    } else {
+                        addConversationDialog.close()
+                    }
+                }
             }
         }
     }

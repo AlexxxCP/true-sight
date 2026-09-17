@@ -8,6 +8,7 @@ SplitView {
     property var messages: []
     property string activeConversationName: ""
     property string activeConversationStatus: ""
+    property string messageLoadError: ""
 
     handle: Rectangle {
         implicitWidth: 6
@@ -32,5 +33,6 @@ SplitView {
         conversationName: root.activeConversationName
         conversationStatus: root.activeConversationStatus
         messages: root.messages
+        messageLoadError: root.messageLoadError
     }
 }

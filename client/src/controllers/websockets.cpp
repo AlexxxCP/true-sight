@@ -20,24 +20,35 @@ WebSocketClient::WebSocketClient(
 
 void WebSocketClient::run(const QString& token) {
     if (running_) {
+        pending_token_ = token;
+        ++generation_;
+        socket_.close();
         return;
     }
     running_ = true;
+    const auto generation = ++generation_;
 
     QCoro::connect(
-        runAsync(token),
+        runAsync(token, generation),
         this,
         [this] {
             running_ = false;
+            if (!pending_token_.isEmpty()) {
+                const auto token = std::move(pending_token_);
+                pending_token_.clear();
+                run(token);
+            }
         }
     );
 }
 
 void WebSocketClient::stop() {
+    ++generation_;
+    pending_token_.clear();
     socket_.close();
 }
 
-QCoro::Task<> WebSocketClient::runAsync(QString token)
+QCoro::Task<> WebSocketClient::runAsync(QString token, std::uint64_t generation)
 {
     QNetworkRequest request{url_};
 
@@ -50,6 +61,11 @@ QCoro::Task<> WebSocketClient::runAsync(QString token)
         request
     );
 
+    if (generation != generation_) {
+        socket_.close();
+        co_return;
+    }
+
     if (!success) {
         emit connectionFailed(socket_.errorString());
         co_return;
@@ -61,10 +77,15 @@ QCoro::Task<> WebSocketClient::runAsync(QString token)
         const QString& message,
         qCoro(socket_).textMessages()
     ) {
+        if (generation != generation_) {
+            co_return;
+        }
         handleMessage(message);
     }
 
-    emit disconnected();
+    if (generation == generation_) {
+        emit disconnected();
+    }
 }
 
 void WebSocketClient::handleMessage(

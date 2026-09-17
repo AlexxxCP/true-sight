@@ -18,6 +18,12 @@ std::vector<unsigned char> sign_ed25519(
     std::span<const unsigned char> msg
 );
 
+bool verify_ed25519(
+    std::span<const uint8_t> public_key,
+    std::span<const uint8_t> msg,
+    std::span<const uint8_t> signature
+);
+
 std::string base64url_encode(std::span<const unsigned char> input);
 
 std::vector<crypto::u8> decodeBase64Url(const QString& text);

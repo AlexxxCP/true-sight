@@ -12,6 +12,7 @@
 #include "controllers/get_challenge.hpp"
 #include "controllers/validate_challenge.hpp"
 #include "controllers/messages.hpp"
+#include "controllers/register.hpp"
 
 #include "db/database.hpp"
 #include "http/router.hpp"
@@ -158,6 +159,7 @@ int main() {
     router.register_path("/health-check", std::make_unique<HealthCheckController>(db, ws));
     router.register_path("/get-challenge", std::make_unique<GetChallengeController>(db));
     router.register_path("/validate-challenge", std::make_unique<ValidateChallengeController>(db));
+    router.register_path("/register", std::make_unique<RegisterController>(db));
     router.register_path(
         "/messages",
         std::make_unique<MessagesController>(db, ws),

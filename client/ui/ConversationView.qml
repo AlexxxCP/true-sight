@@ -9,6 +9,7 @@ Pane {
     property string conversationName: ""
     property string conversationStatus: ""
     property var messages: []
+    property string messageLoadError: ""
 
     padding: 20
 
@@ -24,6 +25,14 @@ Pane {
             Layout.fillWidth: true
             personName: root.conversationName
             status: root.conversationStatus
+        }
+
+        Label {
+            Layout.fillWidth: true
+            visible: root.messageLoadError.length > 0
+            text: root.messageLoadError
+            color: "#b42318"
+            wrapMode: Text.WordWrap
         }
 
         ListView {

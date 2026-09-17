@@ -12,7 +12,8 @@ namespace crypto {
 std::string base64url_encode(const std::string& input) {
     size_t encoded_size = 4 * ((input.size() + 2) / 3);
 
-    std::string result(encoded_size, '\0');
+    // EVP_EncodeBlock also writes a terminating NUL.
+    std::string result(encoded_size + 1, '\0');
 
     int size = EVP_EncodeBlock(
         reinterpret_cast<unsigned char*>(result.data()),

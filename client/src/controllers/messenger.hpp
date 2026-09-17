@@ -8,6 +8,8 @@
 #include <QObject>
 #include <QString>
 #include <QVariantList>
+#include <cstdint>
+#include <set>
 
 class MessengerController final : public QObject {
     Q_OBJECT
@@ -43,9 +45,12 @@ public:
     void onMessageReceived(const QString& peer);
 
     void loadConversations();
+    void onAuthenticated();
+    void resetSession();
 
     Q_INVOKABLE void openConversation(QString peer);
     Q_INVOKABLE void sendMessage(QString message);
+    Q_INVOKABLE QString addConversationFromShare(const QUrl& file);
 
 signals:
     void conversationsChanged();
@@ -60,6 +65,8 @@ private:
     QCoro::Task<> loadConversationsAsync();
     QCoro::Task<> loadMessagesAsync(QString peer);
     QCoro::Task<> sendMessageAsync(QString peer, QString message);
+    std::uint64_t clock(const QString& peer) const;
+    std::uint64_t tick(const QString& peer, std::uint64_t observed = 0);
 
     struct Message {
         QString senderIid;
@@ -74,5 +81,8 @@ private:
     QVariantList conversations_;
     QVariantList messages_;
     QString peer_;
+    std::uint64_t load_generation_ = 0;
+    std::uint64_t session_generation_ = 0;
+    std::set<QString> imported_peers_;
 
 };

@@ -7,6 +7,12 @@ Pane {
     id: root
 
     signal continueRequested(string username, url privateKeyPath)
+    property string errorMessage: ""
+
+    function clearSelection() {
+        usernameField.text = ""
+        privateKeyField.selectedFile = ""
+    }
 
     padding: 40
 
@@ -30,8 +36,7 @@ Pane {
 
         Label {
             Layout.fillWidth: true
-            text: "Enter your username and select your private key. "
-                  + "This screen stores only the key path."
+            text: "Enter your username and select your private key file."
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
             color: "#667085"
@@ -60,6 +65,7 @@ Pane {
             id: privateKeyField
             Layout.fillWidth: true
             title: "Private key"
+            acceptedSuffix: ".tskey"
         }
 
         Basic.Button {
@@ -89,6 +95,14 @@ Pane {
 
             onClicked: root.continueRequested(usernameField.text.trim(),
                                                privateKeyField.selectedFile)
+        }
+
+        Label {
+            Layout.fillWidth: true
+            visible: root.errorMessage.length > 0
+            text: root.errorMessage
+            wrapMode: Text.WordWrap
+            color: "#b42318"
         }
     }
 }

@@ -1,0 +1,8 @@
+{
+  "v": 1,
+  "iid": "test-user",
+  "x25519_pk": "XrIYsl2gRYIjHYEA7eeh5S15kfLSYgy4smEDpIDx9ms=",
+  "x25519_sig": "T7bTTlW/jEEsaisbN5F/BHfAS3/vHB0qWB1XgfPrYj9DSzh2v9HqgjuZDuAm5Z7BUaZbi1lHYuklW3uX2fyaBA==",
+  "ed25519_pk": "f0V24OtlluRyFtGlz0TCtaJCErqndEivXhYUYKX4gNw=",
+  "ed25519_sig": "2bPxOA217QptabA55JZPuBUWX6FAee5y9ge3Y0AWyTWW5cnpVQVllz+9pFwyWzYd44KJ4fulm88e/+nKsrAwCA=="
+}

@@ -9,6 +9,7 @@
 #include "app_settings.hpp"
 #include "controllers/auth.hpp"
 #include "controllers/messenger.hpp"
+#include "controllers/registration.hpp"
 #include "controllers/websockets.hpp"
 #include "stores/identity_keys.hpp"
 
@@ -57,6 +58,7 @@ int main(int argc, char* argv[])
     WebSocketClient ws{QUrl{app_settings.wsUrl()}};
 
     AuthController auth(app_settings, identity_keys);
+    RegistrationController registration(app_settings);
     MessengerController messenger(app_settings, identity_keys);
 
     QQmlApplicationEngine engine;
@@ -72,8 +74,18 @@ int main(int argc, char* argv[])
                 return;
             }
 
-            messenger.loadConversations();
+            messenger.onAuthenticated();
             ws.run(as.accessToken());
+        }
+    );
+
+    QObject::connect(
+        &auth,
+        &AuthController::loggedOut,
+        &messenger,
+        [&messenger, &ws] {
+            ws.stop();
+            messenger.resetSession();
         }
     );
 
@@ -85,9 +97,12 @@ int main(int argc, char* argv[])
     );
 
     engine.rootContext()->setContextProperty("authController", &auth);
+    engine.rootContext()->setContextProperty("registrationController", &registration);
     engine.rootContext()->setContextProperty("messengerController", &messenger);
 
     engine.loadFromModule("TrueSight", "Main");
+
+    auth.autoLogin();
 
     return app.exec();
 }

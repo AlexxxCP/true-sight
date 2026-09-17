@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QSettings>
+#include <QUrl>
 #include <cstdlib>
 #include <stdexcept>
 
@@ -37,6 +38,10 @@ public:
     void setUsername(const QString& username);
     QString backendUrl() const;
     QString wsUrl() const;
+    QString savedUsername() const;
+    QUrl savedPrivateKeyPath() const;
+    void saveLogin(const QString& username, const QUrl& private_key_path);
+    void clearSavedLogin();
 
     bool loggedIn() const;
     void setLoggedIn(bool);

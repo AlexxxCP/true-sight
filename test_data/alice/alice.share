@@ -1,0 +1,8 @@
+{
+  "v": 1,
+  "iid": "alice",
+  "x25519_pk": "cDHUde9EJOIL8trQvpyLQSVWXz5O5Z5Yssxfrh+P42Q=",
+  "x25519_sig": "diuf3GQMVobdn/jVzwFKS9lzYQyV5y6i/lD1q5xAYoD/vJrk/HyYkeO9R2xs9ZPnV11YIoI/VOiI7RPHvL1mBw==",
+  "ed25519_pk": "utuM4SEeNYt0CrdyjH5GiBCFUxmM37NuTUX0IawsD0I=",
+  "ed25519_sig": "1ie3vmFMmTC2eD5wb62UEoAYsqvLo8DVaskHiIx9I4m1EY2FD3JxiLRggZ9LbLhtTFlbe2MOuNJr0DI0dwlnAw=="
+}

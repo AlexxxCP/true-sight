@@ -1,0 +1,8 @@
+{
+  "v": 1,
+  "iid": "bob",
+  "x25519_pk": "RDl+9X51RRgkNQ6H+jIbvNHhwMcgVLW0qmUdiz5VMwA=",
+  "x25519_sig": "kZajrkWczsePYzAQtFkY+HnDl31QARO6cLcnYe6WeFVmMwnsKwUMPVJqxUtYA9jTBXrKG9f5yLJlRvyFemthCg==",
+  "ed25519_pk": "epdEBSlIFQNs0aqJTMmvUVSayU/1KiissQawnAiKphU=",
+  "ed25519_sig": "1UAejqdkEEPMXy9gUjUvZ1c8G8CcMbuXlxcsN1PJLrmRnHNjr/U1j/uKsv5rVkACiCuPaG8du3s1XDwASsqnAw=="
+}

@@ -10,7 +10,6 @@ RUN apt-get update \
         ca-certificates \
         cmake \
         libboost-all-dev \
-        libboost-beast-dev \
         libpqxx-dev \
         libssl-dev \
         ninja-build \
@@ -29,7 +28,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         libboost-all-dev \
-        libboost-beast-dev \
         libpqxx-dev \
         libssl3 \
     && rm -rf /var/lib/apt/lists/*

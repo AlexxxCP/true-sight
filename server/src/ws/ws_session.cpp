@@ -4,7 +4,6 @@
 #include <boost/asio/use_awaitable.hpp>
 #include <boost/beast/core/buffers_to_string.hpp>
 #include <boost/beast/core/error.hpp>
-#include <boost/beast/http/string_body_fwd.hpp>
 
 #include <boost/json.hpp>
 

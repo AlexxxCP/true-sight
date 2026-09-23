@@ -3,7 +3,6 @@
 #include "shared.hpp"
 #include <boost/asio/awaitable.hpp>
 #include <boost/asio/strand.hpp>
-#include <boost/beast/http/string_body_fwd.hpp>
 #include <boost/json/object.hpp>
 
 class WebSocketSession

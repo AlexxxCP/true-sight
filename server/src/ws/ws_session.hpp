@@ -4,6 +4,7 @@
 #include <boost/asio/awaitable.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/json/object.hpp>
+#include <deque>
 
 class WebSocketSession
   : public std::enable_shared_from_this<WebSocketSession> {

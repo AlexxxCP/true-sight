@@ -4,7 +4,12 @@
 #include "http/default_responses.hpp"
 #include <boost/asio/use_awaitable.hpp>
 #include <boost/beast/http/status.hpp>
+#include <span>
 #include <unordered_map>
+
+std::basic_string<std::byte> to_pqxx_bytes(std::span<std::byte> bytes) {
+    return {bytes.begin(), bytes.end()};
+}
 
 
 // /messages?from=Bob&limit=50&offset=150
@@ -49,11 +54,11 @@ AsyncResponse MessagesController::GET(RequestContext& ctx) {
     boost::json::array messages;
 
     for (const auto& message : conversation_res) {
-        auto ciphertext = message["ciphertext"].as<pqxx::bytes>();
-        auto auth_tag = message["auth_tag"].as<pqxx::bytes>();
-        auto nonce = message["nonce"].as<pqxx::bytes>();
+        auto ciphertext = message["ciphertext"].as<pqxx::binarystring>();
+        auto auth_tag = message["auth_tag"].as<pqxx::binarystring>();
+        auto nonce = message["nonce"].as<pqxx::binarystring>();
         auto signature = message["signature"].is_null()
-            ? pqxx::bytes{} : message["signature"].as<pqxx::bytes>();
+            ? pqxx::binarystring{} : message["signature"].as<pqxx::binarystring>();
 
         std::string ciphertext_bytes {
             reinterpret_cast<const char*>(ciphertext.data()),
@@ -223,7 +228,16 @@ AsyncResponse MessagesController::POST(RequestContext& ctx) {
         "(sender_iid, receiver_iid, nonce, ciphertext, auth_tag, signature, protocol_version, message_counter) "
         "VALUES ($1, $2, $3, $4, $5, $6, $7, $8) "
         "RETURNING message_id;",
-        {from, to, nonce_bytes, ciphertext_bytes, auth_tag_bytes, signature_bytes, protocol_version, message_counter},
+        pqxx::params{
+            from,
+            to,
+            to_pqxx_bytes(nonce_bytes),
+            to_pqxx_bytes(ciphertext_bytes),
+            to_pqxx_bytes(auth_tag_bytes),
+            to_pqxx_bytes(signature_bytes),
+            protocol_version,
+            message_counter
+        },
         asio::use_awaitable
     );
 

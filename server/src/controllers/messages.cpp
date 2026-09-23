@@ -169,7 +169,7 @@ AsyncResponse MessagesController::POST(RequestContext& ctx) {
     }
 
     auto from = ctx.authenticated_iid.value();
-    auto to = obj["to"].as_string().c_str();
+    auto to = std::string(obj["to"].as_string());
     auto protocol_version = obj["protocol_version"].as_int64();
     auto message_counter = obj["message_counter"].as_int64();
 

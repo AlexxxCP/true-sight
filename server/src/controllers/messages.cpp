@@ -57,8 +57,6 @@ AsyncResponse MessagesController::GET(RequestContext& ctx) {
         auto ciphertext = message["ciphertext"].as<pqxx::binarystring>();
         auto auth_tag = message["auth_tag"].as<pqxx::binarystring>();
         auto nonce = message["nonce"].as<pqxx::binarystring>();
-        auto signature = message["signature"].is_null()
-            ? pqxx::binarystring{} : message["signature"].as<pqxx::binarystring>();
 
         std::string ciphertext_bytes {
             reinterpret_cast<const char*>(ciphertext.data()),
@@ -76,7 +74,8 @@ AsyncResponse MessagesController::GET(RequestContext& ctx) {
         };
 
         std::string signature_bytes;
-        if (!signature.empty()) {
+        if (!message["signature"].is_null()) {
+            auto signature = message["signature"].as<pqxx::binarystring>();
             signature_bytes.assign(
                 reinterpret_cast<const char*>(signature.data()), signature.size()
             );
